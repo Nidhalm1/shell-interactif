@@ -1,16 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
-void print_prompt()
+void get_current_directory(char *buffer, size_t size)
 {
-    char cwd[1024];
-    if (getcwd(cwd, sizeof(cwd)) != NULL)
+    getcwd(buffer, size);
+}
+
+char *prompt(int last_return_code)
+{
+    char color[10];
+    char dir[1024];
+    get_current_directory(dir, sizeof(dir));
+
+    if (last_return_code == 0)
     {
-        printf("[fsh]%s$ ", cwd); // Prompt simple
+        strcpy(color, "\033[32m"); // Vert
     }
     else
     {
-        perror("getcwd error");
+        strcpy(color, "\033[91m"); // Rouge
     }
+
+    // Format du prompt
+    char *prompt_string = malloc(1024);
+    snprintf(prompt_string, 1024, "\001%s\002[%d]\001\033[00m\002 %s$ ", color, last_return_code, dir);
+    return readline(prompt_string);
 }

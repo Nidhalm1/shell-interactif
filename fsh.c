@@ -1,28 +1,37 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+#include "parser.h"
+#include "execute.h"
+#include "prompt.h"
+
+void sigint_handler(int sig)
+{
+    // Ignore SIGINT
+}
 
 int main()
 {
-    char *line = NULL;
+    signal(SIGINT, sigint_handler); // Ignorer SIGINT
+    int last_return_code = 0;
 
     while (1)
     {
-        // Affiche le prompt
-        print_prompt();
+        // Affichage du prompt
+        char *input = prompt(last_return_code);
+        if (!input)
+        {
+            free(input);
+            break; // Quitter si l'utilisateur saisit Ctrl-D
+        }
+        add_history(input);
 
-        // Lecture de la ligne de commande
-        line = readline("fsh> ");
-        if (!line)
-            break; // Gestion de fin de saisie (Ctrl+D)
-        add_history(line);
-
-        // Analyse et exécution de la commande
-        process_command(line);
-
-        // Libère la mémoire pour la ligne de commande
-        free(line);
+        // Parser et exécuter la commande
+        last_return_code = parse_and_execute(input);
+        free(input);
     }
 
-    printf("Bye!\n");
     return 0;
 }
