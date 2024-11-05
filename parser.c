@@ -33,6 +33,12 @@ int parse_and_execute(char *input)
         return builtin_ftype(filename);
     }
 
+    else if (strcmp(command, "for") == 0)
+    {
+        // TODO : Implémenter la commande for
+        return 0;
+    }
+
     // Commande externe
     return execute_command(command);
 }
