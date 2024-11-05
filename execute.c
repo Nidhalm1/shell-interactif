@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <sched.h>
 #include <sys/wait.h>
 #include "execute.h"
 
@@ -34,12 +33,6 @@ int builtin_cd(const char *path)
 
 int builtin_ftype(const char *filename)
 {
-    if (filename == NULL)
-    {
-        fprintf(stderr, "ftype: no file specified\n");
-        return 1;
-    }
-
     struct stat path_stat;
     if (stat(filename, &path_stat) == -1)
     {
@@ -72,20 +65,19 @@ int builtin_ftype(const char *filename)
 int execute_command(const char *command)
 {
     pid_t pid = fork();
-    if (pid == 0) // Processus enfant
-    {
-        printf("Executing: %s\n", command); // Debugging
+    if (pid == 0)
+    { // Processus enfant
         execlp(command, command, NULL);
-        perror("exec"); // Si execlp échoue
+        perror("exec");
         exit(1);
     }
-    else if (pid < 0) // Erreur de fork
-    {
+    else if (pid < 0)
+    { // Erreur de fork
         perror("fork");
         return 1;
     }
-    else // Processus parent
-    {
+    else
+    { // Processus parent
         int status;
         waitpid(pid, &status, 0);
         return WEXITSTATUS(status);

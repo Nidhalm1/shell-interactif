@@ -1,32 +1,13 @@
-# Compiler
 CC = gcc
+CFLAGS = -Wall -Wextra -g
+LDFLAGS = -lreadline
+TARGET = fsh
+SRCS = fsh.c execute.c parser.c prompt.c
 
-# Compiler flags
-CFLAGS = -Wall -Wextra -std=c11 
-
-# Source files
-SRCS = $(wildcard *.c)
-
-# Object files
-OBJS = $(SRCS:.c=.o)
-
-# Executable name
-TARGET = my_program
-
-# Default target
 all: $(TARGET)
 
-# Link object files to create the executable
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ -lreadline
+$(TARGET): $(SRCS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS) $(LDFLAGS)
 
-# Compile source files to object files
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Clean up build files
 clean:
-	rm -f $(OBJS) $(TARGET)
-
-# Phony targets
-.PHONY: all clean
+	rm -f $(TARGET)
