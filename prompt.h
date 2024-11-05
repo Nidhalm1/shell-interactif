@@ -1,6 +1,7 @@
 #ifndef PROMPT_H
 #define PROMPT_H
 
-void set_prompt_color(int status);
+char *prompt(int last_return_code);
+void add_history(const char *input); // Déclaration pour add_history
 
 #endif // PROMPT_H

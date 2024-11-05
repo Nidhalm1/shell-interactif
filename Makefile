@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -std=c11
+CFLAGS = -Wall -Wextra -std=c11 
 
 # Source files
 SRCS = $(wildcard *.c)
@@ -18,7 +18,7 @@ all: $(TARGET)
 
 # Link object files to create the executable
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -lreadline
 
 # Compile source files to object files
 %.o: %.c

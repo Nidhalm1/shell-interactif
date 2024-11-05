@@ -8,7 +8,6 @@ int parse_and_execute(char *input)
     char *command = strtok(input, " ");
     if (command == NULL)
         return 0;
-
     // Vérification des commandes internes
     if (strcmp(command, "exit") == 0)
     {
@@ -24,7 +23,13 @@ int parse_and_execute(char *input)
     }
     else if (strcmp(command, "ftype") == 0)
     {
-        return builtin_ftype(strtok(NULL, " "));
+        char *filename = strtok(NULL, " ");
+        if (filename == NULL)
+        {
+            fprintf(stderr, "ftype: no file specified\n");
+            return 1; // Code d'erreur
+        }
+        return builtin_ftype(filename);
     }
 
     // Exécuter une commande externe

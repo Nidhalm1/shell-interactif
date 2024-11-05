@@ -23,10 +23,14 @@ int main()
         char *input = prompt(last_return_code);
         if (!input)
         {
-            free(input);
+
             break; // Quitter si l'utilisateur saisit Ctrl-D
         }
-        add_history(input);
+
+        if (input && *input)
+        { // Vérifiez que `input` n'est pas NULL et n'est pas vide
+            add_history(input);
+        }
 
         // Parser et exécuter la commande
         last_return_code = parse_and_execute(input);
