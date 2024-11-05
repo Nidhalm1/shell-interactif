@@ -27,11 +27,6 @@ int main()
             break; // Quitter si l'utilisateur saisit Ctrl-D
         }
 
-        if (*input)
-        { // Vérification si `input` n'est pas vide
-            // Suppression de l'appel à `add_history`
-        }
-
         // Parser et exécuter la commande
         last_return_code = parse_and_execute(input);
         free(input);
