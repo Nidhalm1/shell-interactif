@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
 TARGET = fsh
-SRCS = fsh.c execute.c parser.c prompt.c
+SRCS = fsh.c execute.c parser.c prompt.c command.c
 
 all: $(TARGET)
 
