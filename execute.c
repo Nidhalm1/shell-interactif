@@ -65,11 +65,10 @@ int builtin_ftype(const char *filename)
 
 int execute_command(const char *command, int argc, char **argv)
 {
-
     pid_t pid = fork();
     if (pid == 0)
     { // Processus enfant
-        execlp(command, command, NULL);
+        execvp(command, argv);
         fprintf(stderr, "Error executing command: %s\n", command);
         exit(1);
     }
