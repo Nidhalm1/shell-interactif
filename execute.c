@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include "execute.h"
+#include <errno.h>
 
 int builtin_pwd()
 {
@@ -25,7 +26,7 @@ int builtin_cd(const char *path)
     }
     if (chdir(path) == -1)
     {
-        perror("cd");
+        fprintf(stderr, "cd: %s\n", strerror(errno));
         return 1;
     }
     return 0;
@@ -36,7 +37,7 @@ int builtin_ftype(const char *filename)
     struct stat path_stat;
     if (stat(filename, &path_stat) == -1)
     {
-        perror("ftype");
+        fprintf(stderr, "ftype: cannot stat '%s'\n", filename);
         return 1;
     }
     if (S_ISDIR(path_stat.st_mode))
@@ -62,18 +63,19 @@ int builtin_ftype(const char *filename)
     return 0;
 }
 
-int execute_command(const char *command)
+int execute_command(const char *command, int argc, char **argv)
 {
+
     pid_t pid = fork();
     if (pid == 0)
     { // Processus enfant
         execlp(command, command, NULL);
-        perror("exec");
+        fprintf(stderr, "Error executing command: %s\n", command);
         exit(1);
     }
     else if (pid < 0)
     { // Erreur de fork
-        perror("fork");
+        fprintf(stderr, "Error executing command: %s\n", command);
         return 1;
     }
     else

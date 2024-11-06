@@ -8,7 +8,7 @@ void get_current_directory(char *buffer, size_t size)
 {
     if (getcwd(buffer, size) == NULL)
     {
-        perror("getcwd");
+        fprintf(stderr, "Error: Unable to get current directory\n");
         strcpy(buffer, ""); // Valeur par défaut
     }
 }

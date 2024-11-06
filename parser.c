@@ -3,7 +3,7 @@
 #include <string.h>
 #include "execute.h"
 
-int parse_and_execute(char *input)
+int parse_and_execute(char *input, int argc, char **argv)
 {
     char *command = strtok(input, " ");
     if (command == NULL)
@@ -16,14 +16,29 @@ int parse_and_execute(char *input)
     }
     else if (strcmp(command, "pwd") == 0)
     {
+        if (argc > 1)
+        {
+            fprintf(stderr, "pwd: too many arguments\n");
+            return 1; // Code d'erreur
+        }
         return builtin_pwd();
     }
     else if (strcmp(command, "cd") == 0)
     {
+        if (argc > 2)
+        {
+            fprintf(stderr, "cd: too many arguments\n");
+            return 1; // Code d'erreur
+        }
         return builtin_cd(strtok(NULL, " "));
     }
     else if (strcmp(command, "ftype") == 0)
     {
+        if (argc > 2)
+        {
+            fprintf(stderr, "ftype: too many arguments\n");
+            return 1; // Code d'erreur
+        }
         char *filename = strtok(NULL, " ");
         if (!filename)
         {
@@ -40,5 +55,5 @@ int parse_and_execute(char *input)
     }
 
     // Commande externe
-    return execute_command(command);
+    return execute_command(command, argc, argv);
 }

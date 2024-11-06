@@ -13,7 +13,7 @@ void sigint_handler(int sig)
     // Peut-être ajouter un message si interruption souhaitée
 }
 
-int main()
+int main(int argc, char **argv)
 {
     signal(SIGINT, sigint_handler); // Ignorer SIGINT
     int last_return_code = 0;
@@ -28,7 +28,7 @@ int main()
         }
 
         // Parser et exécuter la commande
-        last_return_code = parse_and_execute(input);
+        last_return_code = parse_and_execute(input, argc, argv);
         free(input);
     }
 
