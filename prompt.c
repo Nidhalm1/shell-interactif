@@ -8,7 +8,7 @@ void get_current_directory(char *buffer, size_t size)
 {
     if (getcwd(buffer, size) == NULL)
     {
-        fprintf(stderr, "Error: Unable to get current directory\n");
+        write(STDERR_FILENO, "Error: Unable to get current directory\n", 40);
         strcpy(buffer, ""); // Valeur par défaut
     }
 }
@@ -30,7 +30,7 @@ char *prompt(int last_return_code)
 
     char *prompt_string = malloc(1024);
     snprintf(prompt_string, 1024, "\001%s\002[%d]\001\033[00m\002 %s$ ", color, last_return_code, dir);
-    printf("%s", prompt_string);
+    write(STDOUT_FILENO, prompt_string, strlen(prompt_string));
     free(prompt_string);
     char *input = malloc(1024);
     if (fgets(input, 1024, stdin) == NULL)

@@ -5,6 +5,7 @@
 
 int parse_and_execute(char *input, int argc, char **argv)
 {
+    printf("Parsing and executing: %d\n", argc);
     char *command = strtok(input, " ");
     if (command == NULL)
         return 0;
@@ -21,16 +22,22 @@ int parse_and_execute(char *input, int argc, char **argv)
             fprintf(stderr, "pwd: too many arguments\n");
             return 1; // Code d'erreur
         }
-        return builtin_pwd();
+        else
+        {
+            return builtin_pwd();
+        }
     }
     else if (strcmp(command, "cd") == 0)
     {
-        if (argc > 2)
+        if (argc > 1)
         {
             fprintf(stderr, "cd: too many arguments\n");
             return 1; // Code d'erreur
         }
-        return builtin_cd(strtok(NULL, " "));
+        else
+        {
+            return builtin_cd(strtok(NULL, " "));
+        }
     }
     else if (strcmp(command, "ftype") == 0)
     {
@@ -45,7 +52,10 @@ int parse_and_execute(char *input, int argc, char **argv)
             fprintf(stderr, "ftype: no file specified\n");
             return 1; // Code d'erreur
         }
-        return builtin_ftype(filename);
+        else
+        {
+            return builtin_ftype(filename);
+        }
     }
 
     else if (strcmp(command, "for") == 0)
