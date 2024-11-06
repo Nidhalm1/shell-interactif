@@ -59,7 +59,6 @@ int main()
         }
 
         // Parser et exécuter la commande
-        printf("Parsing and executing: %d\n", argc(input));
         last_return_code = parse_and_execute(input, argc(input), argv(input));
         free(input);
     }

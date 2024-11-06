@@ -5,7 +5,6 @@
 
 int parse_and_execute(char *input, int argc, char **argv)
 {
-    printf("Parsing and executing: %d\n", argc);
     char *command = strtok(input, " ");
     if (command == NULL)
         return 0;

@@ -6,13 +6,14 @@
 #include <sys/wait.h>
 #include "execute.h"
 #include <errno.h>
+#include "command.h"
 
 int builtin_pwd()
 {
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL)
     {
-        printf("%s\n", cwd);
+        print(cwd);
         return 0;
     }
     return 1;
@@ -26,7 +27,7 @@ int builtin_cd(const char *path)
     }
     if (chdir(path) == -1)
     {
-        fprintf(stderr, "cd: %s\n", strerror(errno));
+        print(strerror(errno));
         return 1;
     }
     return 0;
@@ -37,28 +38,28 @@ int builtin_ftype(const char *filename)
     struct stat path_stat;
     if (stat(filename, &path_stat) == -1)
     {
-        fprintf(stderr, "ftype: cannot stat '%s'\n", filename);
+        print(strerror(errno));
         return 1;
     }
     if (S_ISDIR(path_stat.st_mode))
     {
-        printf("directory\n");
+        print("directory\n");
     }
     else if (S_ISREG(path_stat.st_mode))
     {
-        printf("regular file\n");
+        print("regular file\n");
     }
     else if (S_ISLNK(path_stat.st_mode))
     {
-        printf("symbolic link\n");
+        print("symbolic link\n");
     }
     else if (S_ISFIFO(path_stat.st_mode))
     {
-        printf("named pipe\n");
+        print("FIFO/pipe\n");
     }
     else
     {
-        printf("other\n");
+        print("other\n");
     }
     return 0;
 }
@@ -69,12 +70,15 @@ int execute_command(const char *command, int argc, char **argv)
     if (pid == 0)
     { // Processus enfant
         execvp(command, argv);
-        fprintf(stderr, "Error executing command: %s\n", command);
+        print("Error executing command: ");
+        print(command);
         exit(1);
     }
     else if (pid < 0)
     { // Erreur de fork
-        fprintf(stderr, "Error executing command: %s\n", command);
+        print("Error executing command: ");
+        print(command);
+        print(strerror(errno));
         return 1;
     }
     else
