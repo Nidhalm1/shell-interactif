@@ -36,5 +36,6 @@ char *prompt(int last_return_code)
     {
         return NULL;
     }
+    add_history(input);
     return input;
 }
