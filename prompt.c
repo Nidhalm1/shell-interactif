@@ -9,7 +9,7 @@ void get_current_directory(char *buffer, size_t size)
     if (getcwd(buffer, size) == NULL)
     {
         write(STDERR_FILENO, "Error: Unable to get current directory\n", 40);
-        strcpy(buffer, ""); // Valeur par défaut
+        strcpy(buffer, ""); // Default value
     }
 }
 
@@ -21,23 +21,20 @@ char *prompt(int last_return_code)
 
     if (last_return_code == 0)
     {
-        strcpy(color, "\033[32m"); // Vert
+        strcpy(color, "\033[32m"); // Green
     }
     else
     {
-        strcpy(color, "\033[91m"); // Rouge
+        strcpy(color, "\033[91m"); // Red
     }
 
-    char *prompt_string = malloc(1024);
-    snprintf(prompt_string, 1024, "\001%s\002[%d]\001\033[00m\002 %s$ ", color, last_return_code, dir);
-    write(STDOUT_FILENO, prompt_string, strlen(prompt_string));
-    free(prompt_string);
-    char *input = malloc(1024);
-    if (fgets(input, 1024, stdin) == NULL)
+    char prompt_string[1024];
+    snprintf(prompt_string, sizeof(prompt_string), "\001%s\002[%d]\001\033[00m\002 %s$ ", color, last_return_code, dir);
+
+    char *input = readline(prompt_string);
+    if (input == NULL)
     {
-        free(input);
         return NULL;
     }
-    input[strcspn(input, "\n")] = '\0';
     return input;
 }
