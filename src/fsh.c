@@ -16,7 +16,8 @@ void sigint_handler(int sig)
 int argc(char *input)
 {
     int count = 0;
-    for (int i = 0; i < strlen(input); i++)
+    int len = strlen(input);
+    for (int i = 0; i < len; i++)
     {
         if (input[i] == ' ')
         {
@@ -29,19 +30,44 @@ int argc(char *input)
 char **argv(char *input)
 {
     int arg_count = argc(input);
-    char **args = malloc((arg_count + 1) * sizeof(char *));
+    char **args = malloc((arg_count+1) * sizeof(char *));
+    if (args == NULL) {
+        perror("malloc");
+        return NULL;
+    }
     char *input_copy = strdup(input);
+    if (input_copy == NULL) {
+        perror("strdup");
+        free(args);  // Libérer args si strdup échoue
+        return NULL;
+    }
     char *arg = strtok(input_copy, " ");
     int i = 0;
     while (arg != NULL)
     {
         args[i] = strdup(arg);
+        if (args[i]==NULL)
+        {
+           goto error;
+        }
         arg = strtok(NULL, " ");
         i++;
     }
     args[i] = NULL;
     free(input_copy);
     return args;
+    
+    
+    
+    error:// free tout en cas d'erreur
+    perror("strdup");
+    free(input_copy);
+    for (size_t index = 0; index < i; index++)
+    {
+        free(args[index]);
+    }
+    free(args);
+    return NULL;  
 }
 
 int main()

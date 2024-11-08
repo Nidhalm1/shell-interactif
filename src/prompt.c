@@ -24,27 +24,7 @@ for (size_t i = 0; i < 3; i++)
 }
 
 }
-//compter la longeur reel sans les codes coleur ou les caractere speciauxs
-/*int strlen(char *prompt){
-    int len = strlen(prompt);
-    int saut = 0;
-    int count = 0;
-    for (size_t i = 0; i <len ; i++)
-    {
-        if (prompt[i]='\001')
-        {
-            saut = 1;
-        }
-        if (prompt[i]='\002')
-        {
-            saut = 0;
-        }
-        if (!saut)
-        {
-            count ++;
-        }    
-    }
-}*/
+
 
 char *prompt(int last_return_code)
 {

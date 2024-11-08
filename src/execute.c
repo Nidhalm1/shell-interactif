@@ -16,6 +16,8 @@ int builtin_pwd()
         print(cwd);
         return 0;
     }
+    goto error;
+error:
     return 1;
 }
 
@@ -28,9 +30,11 @@ int builtin_cd(const char *path)
     if (chdir(path) == -1)
     {
         print(strerror(errno));
-        return 1;
+        goto error;
     }
     return 0;
+error:
+    return 1;
 }
 
 int builtin_ftype(const char *filename)
@@ -39,7 +43,7 @@ int builtin_ftype(const char *filename)
     if (stat(filename, &path_stat) == -1)
     {
         print(strerror(errno));
-        return 1;
+        goto error;
     }
     if (S_ISDIR(path_stat.st_mode))
     {
@@ -62,6 +66,8 @@ int builtin_ftype(const char *filename)
         print("other\n");
     }
     return 0;
+error:
+    return 1;
 }
 
 int execute_command(const char *command, int argc, char **argv)
@@ -79,7 +85,7 @@ int execute_command(const char *command, int argc, char **argv)
         print("Error executing command: ");
         print(command);
         print(strerror(errno));
-        return 1;
+        goto error;
     }
     else
     { // Processus parent
@@ -87,4 +93,6 @@ int execute_command(const char *command, int argc, char **argv)
         waitpid(pid, &status, 0);
         return WEXITSTATUS(status);
     }
+error:
+    return 1;
 }
