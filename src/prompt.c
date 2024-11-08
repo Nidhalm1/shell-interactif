@@ -13,6 +13,39 @@ void get_current_directory(char *buffer, size_t size)
     }
 }
 
+void troncate(char *dir){
+int len = strlen(dir);
+int enlever = len - 25;
+strcpy(dir,dir+enlever);
+dir[25]='\0';
+for (size_t i = 0; i < 3; i++)
+{
+    dir[i]= '.';
+}
+
+}
+//compter la longeur reel sans les codes coleur ou les caractere speciauxs
+/*int strlen(char *prompt){
+    int len = strlen(prompt);
+    int saut = 0;
+    int count = 0;
+    for (size_t i = 0; i <len ; i++)
+    {
+        if (prompt[i]='\001')
+        {
+            saut = 1;
+        }
+        if (prompt[i]='\002')
+        {
+            saut = 0;
+        }
+        if (!saut)
+        {
+            count ++;
+        }    
+    }
+}*/
+
 char *prompt(int last_return_code)
 {
     char color[10];
@@ -20,6 +53,10 @@ char *prompt(int last_return_code)
     char color_dir[10];
     char dir[1024];
     get_current_directory(dir, sizeof(dir));
+    if (strlen(dir)>25)
+    {
+    troncate(dir);
+    }
 
     if (last_return_code == 0)
     {
@@ -29,6 +66,7 @@ char *prompt(int last_return_code)
     {
         strcpy(color, "\001\033[91m\002"); // Red
     }
+
     // Couleur pour le répertoire
     strcpy(color_dir, "\001\033[34m\002"); // bleu pour le répertoire
     strcpy(reset_color, "\001\033[00m\002"); // retour à la normal
