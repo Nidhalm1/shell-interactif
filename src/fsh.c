@@ -47,6 +47,7 @@ char **argv(char *input)
 int main()
 {
     signal(SIGINT, sigint_handler); // Ignorer SIGINT
+    signal(SIGTERM, sigint_handler); // Ignorer SIGTERM
     int last_return_code = 0;
 
     while (1)

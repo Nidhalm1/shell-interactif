@@ -16,20 +16,25 @@ void get_current_directory(char *buffer, size_t size)
 char *prompt(int last_return_code)
 {
     char color[10];
+    char reset_color[10];
+    char color_dir[10];
     char dir[1024];
     get_current_directory(dir, sizeof(dir));
 
     if (last_return_code == 0)
     {
-        strcpy(color, "\033[32m"); // Green
+        strcpy(color, "\001\033[32m\002"); // Green
     }
     else
     {
-        strcpy(color, "\033[91m"); // Red
+        strcpy(color, "\001\033[91m\002"); // Red
     }
+    // Couleur pour le répertoire
+    strcpy(color_dir, "\001\033[34m\002"); // bleu pour le répertoire
+    strcpy(reset_color, "\001\033[00m\002"); // retour à la normal
 
-    char prompt_string[1024];
-    snprintf(prompt_string, sizeof(prompt_string), "\001%s\002[%d]\001\033[00m\002 %s$ ", color, last_return_code, dir);
+    char prompt_string[1070];
+    snprintf(prompt_string, sizeof(prompt_string), "%s[%d]%s%s%s$ ", color, last_return_code, color_dir, dir, reset_color);
 
     char *input = readline(prompt_string);
     if (input == NULL)
