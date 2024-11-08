@@ -86,7 +86,7 @@ int main()
         }
 
         // Parser et exécuter la commande
-        last_return_code = parse_and_execute(input, argc(input), argv(input));
+        last_return_code = parse_and_execute(argc(input), argv(input));
         free(input);
     }
 

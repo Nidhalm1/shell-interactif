@@ -3,20 +3,16 @@
 #include <string.h>
 #include "execute.h"
 
-int parse_and_execute(char *input, int argc, char **argv)
+int parse_and_execute( int argc, char **argv)
 {
-    char *command = strtok(input, " ");
-    if (command == NULL)
-        return 0;
-
     // Commandes internes
-    if (strcmp(command, "exit") == 0)
+    if (strcmp(argv[0], "exit") == 0)
     {
         exit(0);
     }
-    else if (strcmp(command, "pwd") == 0)
+    else if (strcmp(argv[0], "pwd") == 0)
     {
-        if (argc > 1)
+        if (argc > 1)// genrer le cas de PWD -P 
         {
             fprintf(stderr, "pwd: too many arguments\n");
             return 1; // Code d'erreur
@@ -26,7 +22,7 @@ int parse_and_execute(char *input, int argc, char **argv)
             return builtin_pwd();
         }
     }
-    else if (strcmp(command, "cd") == 0)
+    else if (strcmp(argv[0], "cd") == 0)
     {
         if (argc > 1)
         {
@@ -38,7 +34,7 @@ int parse_and_execute(char *input, int argc, char **argv)
             return builtin_cd(strtok(NULL, " "));
         }
     }
-    else if (strcmp(command, "ftype") == 0)
+    else if (strcmp(argv[0], "ftype") == 0)
     {
         if (argc > 2)
         {
@@ -57,12 +53,12 @@ int parse_and_execute(char *input, int argc, char **argv)
         }
     }
 
-    else if (strcmp(command, "for") == 0)
+    else if (strcmp(argv[0], "for") == 0)
     {
         // TODO : Implémenter la commande for
         return 0;
     }
 
     // Commande externe
-    return execute_command(command, argc, argv);
+    return execute_command(argv[0], argc, argv);
 }
