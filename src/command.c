@@ -8,7 +8,7 @@
 
 #include <unistd.h>
 
-int printt(char *input)
+int printt(const char *input)
 {
     if (write(STDOUT_FILENO, input, strlen(input)) == -1)
     {

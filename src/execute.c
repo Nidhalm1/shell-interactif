@@ -22,20 +22,6 @@ int builtin_pwd()
     }
     return 1;
 }
-char *get_pwd()
-{
-    char *cwd = (char *)malloc(1024 * sizeof(char));
-    if (cwd == NULL)
-    {
-        return NULL;
-    }
-    if (getcwd(cwd, 1024) != NULL)
-    {
-        return cwd;
-    }
-    free(cwd);
-    return NULL;
-}
 
 int builtin_cd(const char *path)
 {   
@@ -100,7 +86,7 @@ int builtin_ftype(const char *filename)
     return 0;
 }
 
-int execute_command(const char *command, int argc, char **argv)
+int execute_command(const char *command,char **argv)
 {
     pid_t pid = fork();
     if (pid == 0)
@@ -124,10 +110,11 @@ int execute_command(const char *command, int argc, char **argv)
         if (WIFEXITED(status)) {
            return WEXITSTATUS(status);
         }
-        else 
+        else{
             if (WIFSIGNALED(status)){            // Si l'enfant s'est terminé de manière anormale (par signal)
                 return 2;
             }
             return 1;
+        }
     }
 }
