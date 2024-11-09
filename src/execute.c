@@ -53,7 +53,7 @@ int builtin_cd(const char *path)
         char *oldpwd = getenv("OLDPWD");
         if (oldpwd == NULL)
         {
-            print("OLDPWD not set\n");
+            print("cd: OLDPWD not set\n");
             return 1;
         }
         print(oldpwd);
