@@ -6,11 +6,12 @@
 int parse_and_execute( int argc, char **argv)
 {
     // Commandes internes
-    if (strcmp(argv[0], "exit") == 0)
+    if (argc==0)
     {
-        exit(0);
+        return 0;
     }
-    else if (strcmp(argv[0], "pwd") == 0)
+    
+    if (strcmp(argv[0], "pwd") == 0)
     {
         if (argc > 1)// genrer le cas de PWD -P 
         {
@@ -24,14 +25,18 @@ int parse_and_execute( int argc, char **argv)
     }
     else if (strcmp(argv[0], "cd") == 0)
     {
-        if (argc > 1)
+        if (argc > 2)
         {
             fprintf(stderr, "cd: too many arguments\n");
             return 1; // Code d'erreur
         }
+        else if (argc==1)
+        {
+            return builtin_cd(NULL);
+        }
         else
         {
-            return builtin_cd(strtok(NULL, " "));
+            return builtin_cd(argv[1]);
         }
     }
     else if (strcmp(argv[0], "ftype") == 0)
@@ -60,5 +65,8 @@ int parse_and_execute( int argc, char **argv)
     }
 
     // Commande externe
+    
     return execute_command(argv[0], argc, argv);
+    
+    
 }

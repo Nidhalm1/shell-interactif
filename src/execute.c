@@ -22,10 +22,15 @@ int builtin_pwd()
 int builtin_cd(const char *path)
 {   
     
-    if (path == NULL || strcmp(path, "-") == 0)
+    if (path == NULL)
     {
         path = getenv("HOME");
     }
+    else if (strcmp(path,"-")==0)
+    {
+        /* code */
+    }
+    
     if (chdir(path) == -1)
     {
         print(strerror(errno));

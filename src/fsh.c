@@ -90,6 +90,11 @@ int main()
             free(input);  // Libérer la mémoire allouée pour l'entrée
             return 255;  // Quitte le shell avec le code 255
         }
+        if (strcmp(input,"")==0)
+        {
+            continue;
+        }
+        
 
         // Parser et exécuter la commande
         last_return_code = parse_and_execute(argc(input), argv(input));
