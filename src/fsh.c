@@ -82,7 +82,13 @@ int main()
         char *input = prompt(last_return_code);
         if (!input)
         {
-            break; // Quitter si l'utilisateur saisit Ctrl-D
+            printf("\nExiting shell...\n");
+            return 255; // Quitter si l'utilisateur saisit Ctrl-D
+        }
+        if (strcmp(input, "exit") == 0) {
+            printf("\nExiting shell...\n");
+            free(input);  // Libérer la mémoire allouée pour l'entrée
+            return 255;  // Quitte le shell avec le code 255
         }
 
         // Parser et exécuter la commande

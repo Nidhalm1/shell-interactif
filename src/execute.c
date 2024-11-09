@@ -71,8 +71,7 @@ int execute_command(const char *command, int argc, char **argv)
     if (pid == 0)
     { // Processus enfant
         execvp(command, argv);
-        print("Error executing command: ");
-        print(command);
+        printf("%s: command not found\n", command);
         exit(1);
     }
     else if (pid < 0)
@@ -86,6 +85,13 @@ int execute_command(const char *command, int argc, char **argv)
     { // Processus parent
         int status;
         waitpid(pid, &status, 0);
-        return WEXITSTATUS(status);
+        if (WIFEXITED(status)) {
+           return WEXITSTATUS(status);
+        }
+        else 
+            if (WIFSIGNALED(status)){            // Si l'enfant s'est terminé de manière anormale (par signal)
+                return 2;
+            }
+            return 1;
     }
 }

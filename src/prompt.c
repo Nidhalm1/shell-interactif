@@ -49,11 +49,16 @@ char *prompt(int last_return_code)
 
     // Couleur pour le répertoire
     strcpy(color_dir, "\001\033[34m\002"); // bleu pour le répertoire
-    strcpy(reset_color, "\001\033[00m\002"); // retour à la normal
+    strcpy(reset_color, "\001\033[00m\002"); //coleur de base normal
 
     char prompt_string[1070];
-    snprintf(prompt_string, sizeof(prompt_string), "%s[%d]%s%s%s$ ", color, last_return_code, color_dir, dir, reset_color);
-
+    if (last_return_code!=2)
+    {
+        snprintf(prompt_string, sizeof(prompt_string), "%s[%d]%s%s%s$ ", color, last_return_code, color_dir, dir, reset_color);
+    }
+    else{
+        snprintf(prompt_string, sizeof(prompt_string), "%s[%s]%s%s%s$ ", color, "SIG", color_dir, dir, reset_color);
+    }
     char *input = readline(prompt_string);
     if (input == NULL)
     {
