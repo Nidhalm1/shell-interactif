@@ -8,16 +8,16 @@
 #else
 #include <sys/wait.h>
 #endif
-#include "execute.h"
+#include "../include/execute.h"
 #include <errno.h>
-#include "command.h"
+#include "../include/command.h"
 
 int builtin_pwd()
 {
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL)
     {
-        print(cwd);
+        printt(cwd);
         return 0;
     }
     return 1;
@@ -41,7 +41,7 @@ int builtin_cd(const char *path)
 {   
     char current_dir[1076];
     if (getcwd(current_dir, sizeof(current_dir)) == NULL) {
-        print(strerror(errno));
+        printt(strerror(errno));
         return 1;
     }
     if (path == NULL)
@@ -53,16 +53,16 @@ int builtin_cd(const char *path)
         char *oldpwd = getenv("OLDPWD");
         if (oldpwd == NULL)
         {
-            print("cd: OLDPWD not set\n");
+            printt("cd: OLDPWD not set\n");
             return 1;
         }
-        print(oldpwd);
+        printt(oldpwd);
         path = oldpwd;
     }
     
     if (chdir(path) == -1)
     {
-        print(strerror(errno));
+        printt(strerror(errno));
         return 1;
     }
     setenv("OLDPWD", current_dir, 1);
@@ -74,28 +74,28 @@ int builtin_ftype(const char *filename)
     struct stat path_stat;
     if (stat(filename, &path_stat) == -1)
     {
-        print(strerror(errno));
+        printt(strerror(errno));
         return 1;
     }
     if (S_ISDIR(path_stat.st_mode))
     {
-        print("directory\n");
+        printt("directory\n");
     }
     else if (S_ISREG(path_stat.st_mode))
     {
-        print("regular file\n");
+        printt("regular file\n");
     }
     else if (S_ISLNK(path_stat.st_mode))
     {
-        print("symbolic link\n");
+        printt("symbolic link\n");
     }
     else if (S_ISFIFO(path_stat.st_mode))
     {
-        print("FIFO/pipe\n");
+        printt("FIFO/pipe\n");
     }
     else
     {
-        print("other\n");
+        printt("other\n");
     }
     return 0;
 }
@@ -106,14 +106,15 @@ int execute_command(const char *command, int argc, char **argv)
     if (pid == 0)
     { // Processus enfant
         execvp(command, argv);
-        printf("%s: command not found\n", command);
+        printt(command);
+        printt(": command not found\n");
         exit(1);
     }
     else if (pid < 0)
     { // Erreur de fork
-        print("Error executing command: ");
-        print(command);
-        print(strerror(errno));
+        printt("Error executing command: ");
+        printt(command);
+        printt(strerror(errno));
         return 1;
     }
     else

@@ -3,9 +3,11 @@
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
-#include "parser.h"
-#include "execute.h"
-#include "prompt.h"
+#include "../include/parser.h"
+#include "../include/execute.h"
+#include "../include/prompt.h"
+#include "../include/command.h"
+
 
 void sigint_handler(int sig)
 {
@@ -62,7 +64,7 @@ char **argv(char *input)
     error:// free tout en cas d'erreur
     perror("strdup");
     free(input_copy);
-    for (size_t index = 0; index < i; index++)
+    for (int index = 0; index < i; index++)
     {
         free(args[index]);
     }
@@ -82,11 +84,11 @@ int main()
         char *input = prompt(last_return_code);
         if (!input)
         {
-            printf("\nExiting shell...\n");
+            printt("\nExiting shell...\n");
             return 255; // Quitter si l'utilisateur saisit Ctrl-D
         }
         if (strcmp(input, "exit") == 0) {
-            printf("\nExiting shell...\n");
+            printt("\nExiting shell...\n");
             free(input);  // Libérer la mémoire allouée pour l'entrée
             return 255;  // Quitte le shell avec le code 255
         }

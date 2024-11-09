@@ -3,16 +3,15 @@
 #include <unistd.h>
 #include <readline/readline.h>
 #include <string.h>
+#include "../include/command.h"
 
 void get_current_directory(char *buffer, size_t size)
 {
     if (getcwd(buffer, size) == NULL)
     {
-        write(STDERR_FILENO, "Error: Unable to get current directory\n", 40);
-        strcpy(buffer, ""); // Default value
+        printerr("Error: Unable to get current directory\n");
     }
 }
-
 void troncate(char *dir)
 {
     int len = strlen(dir);

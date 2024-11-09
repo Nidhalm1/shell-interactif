@@ -1,6 +1,6 @@
 # Compilateur et options
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -Wall -Wextra -g -Iinclude #pour le dosssier include
 LDFLAGS = -lreadline
 
 # Nom de l'exécutable

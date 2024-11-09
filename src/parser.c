@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "execute.h"
+#include "../include/execute.h"
 
 int parse_and_execute( int argc, char **argv)
 {
@@ -15,7 +15,7 @@ int parse_and_execute( int argc, char **argv)
     {
         if (argc > 1)// genrer le cas de PWD -P 
         {
-            fprintf(stderr, "pwd: too many arguments\n");
+            printerr("pwd: too many arguments\n");
             return 1; // Code d'erreur
         }
         else
@@ -27,7 +27,7 @@ int parse_and_execute( int argc, char **argv)
     {
         if (argc > 2)
         {
-            fprintf(stderr, "cd: too many arguments\n");
+            printerr("cd: too many arguments\n");
             return 1; // Code d'erreur
         }
         else if (argc==1)
@@ -43,13 +43,13 @@ int parse_and_execute( int argc, char **argv)
     {
         if (argc > 2)
         {
-            fprintf(stderr, "ftype: too many arguments\n");
+            printerr("ftype: too many arguments\n");
             return 1; // Code d'erreur
         }
         char *filename = strtok(NULL, " ");
         if (!filename)
         {
-            fprintf(stderr, "ftype: no file specified\n");
+            printerr("ftype: no file specified\n");
             return 1; // Code d'erreur
         }
         else
