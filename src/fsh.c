@@ -8,7 +8,6 @@
 #include "../include/prompt.h"
 #include "../include/command.h"
 
-
 void sigint_handler(int sig)
 {
     (void)sig; // Paramètre inutilisé
@@ -32,15 +31,17 @@ int argc(char *input)
 char **argv(char *input)
 {
     int arg_count = argc(input);
-    char **args = malloc((arg_count+1) * sizeof(char *));
-    if (args == NULL) {
+    char **args = malloc((arg_count + 1) * sizeof(char *));
+    if (args == NULL)
+    {
         perror("malloc");
         return NULL;
     }
     char *input_copy = strdup(input);
-    if (input_copy == NULL) {
+    if (input_copy == NULL)
+    {
         perror("strdup");
-        free(args);  // Libérer args si strdup échoue
+        free(args); // Libérer args si strdup échoue
         return NULL;
     }
     char *arg = strtok(input_copy, " ");
@@ -48,9 +49,9 @@ char **argv(char *input)
     while (arg != NULL)
     {
         args[i] = strdup(arg);
-        if (args[i]==NULL)
+        if (args[i] == NULL)
         {
-           goto error;
+            goto error;
         }
         arg = strtok(NULL, " ");
         i++;
@@ -58,10 +59,8 @@ char **argv(char *input)
     args[i] = NULL;
     free(input_copy);
     return args;
-    
-    
-    
-    error:// free tout en cas d'erreur
+
+error: // free tout en cas d'erreur
     perror("strdup");
     free(input_copy);
     for (int index = 0; index < i; index++)
@@ -69,12 +68,12 @@ char **argv(char *input)
         free(args[index]);
     }
     free(args);
-    return NULL;  
+    return NULL;
 }
 
 int main()
 {
-    signal(SIGINT, sigint_handler); // Ignorer SIGINT
+    signal(SIGINT, sigint_handler);  // Ignorer SIGINT
     signal(SIGTERM, sigint_handler); // Ignorer SIGTERM
     int last_return_code = 0;
 
@@ -87,16 +86,16 @@ int main()
             printt("\nExiting shell...\n");
             return 255; // Quitter si l'utilisateur saisit Ctrl-D
         }
-        if (strcmp(input, "exit") == 0) {
+        if (strcmp(input, "exit") == 0)
+        {
             printt("\nExiting shell...\n");
-            free(input);  // Libérer la mémoire allouée pour l'entrée
+            free(input); // Libérer la mémoire allouée pour l'entrée
             return 255;  // Quitte le shell avec le code 255
         }
-        if (strcmp(input,"")==0)
+        if (strcmp(input, "") == 0)
         {
             continue;
         }
-        
 
         // Parser et exécuter la commande
         last_return_code = parse_and_execute(argc(input), argv(input));
