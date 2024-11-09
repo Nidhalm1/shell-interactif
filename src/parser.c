@@ -32,11 +32,11 @@ int parse_and_execute( int argc, char **argv)
         }
         else if (argc==1)
         {
-            return builtin_cd(NULL);
+            return builtin_cd(NULL, NULL);
         }
         else
         {
-            return builtin_cd(argv[1]);
+            return builtin_cd(argv[1],NULL);
         }
     }
     else if (strcmp(argv[0], "ftype") == 0)

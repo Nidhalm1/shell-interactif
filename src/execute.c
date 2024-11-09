@@ -3,7 +3,11 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <sys/wait.h>
+#endif
 #include "execute.h"
 #include <errno.h>
 #include "command.h"
@@ -18,17 +22,42 @@ int builtin_pwd()
     }
     return 1;
 }
+char *get_pwd()
+{
+    char *cwd = (char *)malloc(1024 * sizeof(char));
+    if (cwd == NULL)
+    {
+        return NULL;
+    }
+    if (getcwd(cwd, 1024) != NULL)
+    {
+        return cwd;
+    }
+    free(cwd);
+    return NULL;
+}
 
 int builtin_cd(const char *path)
 {   
-    
+    char current_dir[1076];
+    if (getcwd(current_dir, sizeof(current_dir)) == NULL) {
+        print(strerror(errno));
+        return 1;
+    }
     if (path == NULL)
     {
         path = getenv("HOME");
     }
-    else if (strcmp(path,"-")==0)
+    else if (strcmp(path, "-") == 0)
     {
-        /* code */
+        char *oldpwd = getenv("OLDPWD");
+        if (oldpwd == NULL)
+        {
+            print("OLDPWD not set\n");
+            return 1;
+        }
+        print(oldpwd);
+        path = oldpwd;
     }
     
     if (chdir(path) == -1)
@@ -36,6 +65,7 @@ int builtin_cd(const char *path)
         print(strerror(errno));
         return 1;
     }
+    setenv("OLDPWD", current_dir, 1);
     return 0;
 }
 
