@@ -5,6 +5,7 @@
 #include "../include/builtin.h" // Si les fonctions builtin_* sont déclarées ici
 #include "../include/command.h" // Si printerr est déclarée ici
 #include <sched.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 int parse_and_execute(int argc, char **argv)
