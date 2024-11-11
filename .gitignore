@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Ignore node_modules directory
 node_modules/
 
@@ -27,3 +28,33 @@ Thumbs.db
 .vscode/
 .idea/
 .sy5-2024-2025-projet-fsh-autotests.nosync
+=======
+# Ignore node_modules directory
+node_modules/
+
+# Ignore log files
+*.log
+
+# Ignore build directories
+dist/
+build/
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore environment variable files
+.env
+
+# Ignore compiled files
+*.out
+*.o
+
+# Ignore temporary files
+*.tmp
+*.swp
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+>>>>>>> 1f76abd (ca veut pas merge)
