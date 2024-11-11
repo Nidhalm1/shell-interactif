@@ -14,6 +14,7 @@ int builtin_pwd()
     if (getcwd(cwd, sizeof(cwd)) != NULL)
     {
         printt(cwd);
+        printt("\n");
         return 0;
     }
     return 1;

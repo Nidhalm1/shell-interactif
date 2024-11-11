@@ -27,7 +27,7 @@ int argc(char *input)
     }
     return count + 1;
 }
-
+/*faudra enlevr les guillment des mots si y en a */
 char **argv(char *input)
 {
     int arg_count = argc(input);

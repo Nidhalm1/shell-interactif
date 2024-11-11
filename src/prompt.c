@@ -59,6 +59,7 @@ char *prompt(int last_return_code)
     {
         snprintf(prompt_string, sizeof(prompt_string), "%s[%s]%s%s%s$ ", color, "SIG", color_dir, dir, reset_color);
     }
+    rl_outstream = stderr;
     char *input = readline(prompt_string);
     if (input == NULL)
     {
