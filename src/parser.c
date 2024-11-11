@@ -24,4 +24,5 @@ int parse_and_execute(int argc, char **argv)
             return parse_and_execute_pipe(argc,argv);
         }
     }
+    return parse_and_execute_simple(argc,argv);
 }
