@@ -15,7 +15,7 @@ int parse_and_execute(int argc, char **argv)
     {
         return 0;
     }
-    if (argc==1)
+    else if (argc==1)
     {
         return parse_and_execute_simple(argc,argv);
     }
@@ -24,9 +24,7 @@ int parse_and_execute(int argc, char **argv)
     {
         if (argv[i]="|")
         {
-            return 
+            return parse_and_execute_pipe(argc,argv);
         }
-        
     }
-    return execute_command(argv[0], argv);
 }
