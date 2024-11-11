@@ -168,7 +168,7 @@ int parse_and_execute(int argc, char **argv)
     int parc=2;
     optind = 3;
     // Analyse des options -A, -r, -e <arg>, -p <arg>
-    while ((opt = getopt(argc, argv, "Are:p:")) != -1) {
+    while ((opt = getopt(argc, argv, "Are:t:p:")) != -1) {
         switch (opt) {
             case 'A':
                 argv_bis[parc++]="-A";
@@ -180,12 +180,15 @@ int parse_and_execute(int argc, char **argv)
                  argv_bis[parc++]="-e";
                  argv_bis[parc++]=optarg;
                 break;
+            case 't':
+                 argv_bis[parc++]="-t";
+                 argv_bis[parc++]=optarg;
+                break;
             case 'p':
                  argv_bis[parc++]="-p";
                  argv_bis[parc++]=optarg;
                 break;
             default:
-                printf(stderr, "Option inconnue : %c\n", optopt);
                 break;
         }
     }
