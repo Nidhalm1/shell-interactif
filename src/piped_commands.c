@@ -50,7 +50,12 @@ int parse_and_execute_pipe(int argc, char **argv)
         }
 
         // Exécute la commande avec les bons descripteurs
-        execute_piped_command(s[0], fd_in, (i + j < len) ? pipefd[1] : STDOUT_FILENO, s);
+        int val =execute_piped_command(s[0], fd_in, (i + j < len) ? pipefd[1] : STDOUT_FILENO, s);
+        if (val != 0)
+        {
+            return val;
+        }
+        
         free(s);
 
         // Fermeture de l'extrémité d'écriture dans le processus parent
