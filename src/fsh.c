@@ -83,7 +83,7 @@ int main()
         char *input = prompt(last_return_code);
         if (!input)
         {
-            return 0; // Quitter si l'utilisateur saisit Ctrl-D
+            return last_return_code; // Quitter si l'utilisateur saisit Ctrl-D
         }
         char **s = argv(input);
         if (s[0] && strcmp(s[0], "exit") == 0) // Vérifier si s[0] est valide

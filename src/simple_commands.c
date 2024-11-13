@@ -60,16 +60,6 @@ int parse_and_execute_simple(int argc, char **argv)
         // TODO : Implémenter la commande for
         return 0;
     }
-    else if (strcmp(argv[0], "echo") == 0)
-    {
-        // Ajouter le support de la commande echo
-        for (int i = 1; i < argc; i++)
-        {
-            printf("%s ", argv[i]);
-        }
-        printf("\n");
-        return 0;
-    }
 
     // Commande externe
 
