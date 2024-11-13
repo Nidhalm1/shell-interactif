@@ -12,15 +12,12 @@
 #include <errno.h>
 #include "../include/command.h"
 
-
 int execute_command(const char *command, char **argv)
 {
     pid_t pid = fork();
     if (pid == 0)
     { // Processus enfant
         execvp(command, argv);
-        printt(command);
-        printt(": command not found\n");
         exit(1);
     }
     else if (pid < 0)

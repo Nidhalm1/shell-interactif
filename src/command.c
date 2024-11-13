@@ -17,7 +17,8 @@ int printt(const char *input)
     }
     return 0;
 }
-int printerr(char *input){
+int printerr(char *input)
+{
     if (write(STDERR_FILENO, input, strlen(input)) == -1)
     {
         perror("write");

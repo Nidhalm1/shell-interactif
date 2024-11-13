@@ -7,7 +7,6 @@
 #include "../include/command.h"
 #include <errno.h>
 
-
 int builtin_pwd()
 {
     char cwd[1024];
@@ -25,7 +24,9 @@ int builtin_cd(const char *path)
     char current_dir[1076];
     if (getcwd(current_dir, sizeof(current_dir)) == NULL)
     {
+        printt("cd: ");
         printt(strerror(errno));
+        printt("\n");
         return 1;
     }
     if (path == NULL)
@@ -37,11 +38,9 @@ int builtin_cd(const char *path)
         char *oldpwd = getenv("OLDPWD");
         if (oldpwd == NULL)
         {
-            printt("cd: OLDPWD not set\n");
+            printt("cd: OLDPWD not set");
             return 1;
         }
-        printt(oldpwd);
-        printt("\n");
         path = oldpwd;
     }
 
@@ -57,12 +56,18 @@ int builtin_cd(const char *path)
 int builtin_ftype(const char *filename)
 {
     struct stat path_stat;
-    if (stat(filename, &path_stat) == -1)
+    if (lstat(filename, &path_stat) == -1)
     {
-        printt(strerror(errno));
+        printerr("ftype: ");
+        perror(strerror(errno));
+        printerr("\n");
         return 1;
     }
-    if (S_ISDIR(path_stat.st_mode))
+    if (S_ISLNK(path_stat.st_mode))
+    {
+        printt("symbolic link\n");
+    }
+    else if (S_ISDIR(path_stat.st_mode))
     {
         printt("directory\n");
     }
@@ -70,13 +75,9 @@ int builtin_ftype(const char *filename)
     {
         printt("regular file\n");
     }
-    else if (S_ISLNK(path_stat.st_mode))
-    {
-        printt("symbolic link\n");
-    }
     else if (S_ISFIFO(path_stat.st_mode))
     {
-        printt("FIFO/pipe\n");
+        printt("named pipe\n");
     }
     else
     {

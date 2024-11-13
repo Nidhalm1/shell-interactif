@@ -83,15 +83,26 @@ int main()
         char *input = prompt(last_return_code);
         if (!input)
         {
-            printt("\nExiting shell...\n");
-            return 255; // Quitter si l'utilisateur saisit Ctrl-D
+            return 0; // Quitter si l'utilisateur saisit Ctrl-D
         }
-        if (strcmp(input, "exit") == 0)
+        char **s = argv(input);
+        if (s[0] && strcmp(s[0], "exit") == 0) // Vérifier si s[0] est valide
         {
-            printt("\nExiting shell...\n");
             free(input); // Libérer la mémoire allouée pour l'entrée
-            return 255;  // Quitte le shell avec le code 255
+            if (s[1] == NULL)
+            {
+                return last_return_code; // Quitte le shell avec le code 0
+            }
+            else if (s[1] != NULL)
+            {
+                return atoi(s[1]); // Quitte le shell avec le code passé en argument
+            }
+            else
+            {
+                return 1; // Code de retour par défaut si aucun argument n'est passé
+            }
         }
+
         if (strcmp(input, "") == 0)
         {
             continue;

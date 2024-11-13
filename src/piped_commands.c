@@ -14,14 +14,15 @@ int execute_piped_command(const char *command, int fd0, int fd1, char **argv);
 int parse_and_execute_pipe(int argc, char **argv)
 {
     int fd_in = STDIN_FILENO; // Initialement, l'entrée est le stdin
-    int pipefd[2]; // Pipe pour communication
+    int pipefd[2];            // Pipe pour communication
     int len = argc;
     int i = 0;
 
     while (i < len)
     {
         char **s = malloc((len - i + 1) * sizeof(char *)); // Ajustement de la taille
-        if (!s) {
+        if (!s)
+        {
             perror("malloc");
             return 1;
         }
@@ -50,12 +51,12 @@ int parse_and_execute_pipe(int argc, char **argv)
         }
 
         // Exécute la commande avec les bons descripteurs
-        int val =execute_piped_command(s[0], fd_in, (i + j < len) ? pipefd[1] : STDOUT_FILENO, s);
+        int val = execute_piped_command(s[0], fd_in, (i + j < len) ? pipefd[1] : STDOUT_FILENO, s);
         if (val != 0)
         {
             return val;
         }
-        
+
         free(s);
 
         // Fermeture de l'extrémité d'écriture dans le processus parent

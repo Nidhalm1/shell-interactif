@@ -43,7 +43,7 @@ int parse_and_execute_simple(int argc, char **argv)
             printerr("ftype: too many arguments\n");
             return 1; // Code d'erreur
         }
-        char *filename = strtok(NULL, " ");
+        char *filename = argv[1];
         if (!filename)
         {
             printerr("ftype: no file specified\n");
@@ -75,5 +75,3 @@ int parse_and_execute_simple(int argc, char **argv)
 
     return execute_command(argv[0], argv);
 }
-
-

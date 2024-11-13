@@ -13,31 +13,34 @@
 
 int parse_and_execute(int argc, char **argv)
 {
+    // Si aucun argument n'est passé, on sort immédiatement
     if (argc == 0)
     {
         return 0;
     }
+    // Si un seul argument, on le traite comme une commande simple
     else if (argc == 1)
     {
         return parse_and_execute_simple(argc, argv);
     }
+
+    // Parcours des arguments pour détecter un pipe (|) et rediriger l'exécution
     for (int i = 0; i < argc; i++)
     {
-        if (strcmp(argv[i], "|") == 0)
+        // Vérifie si l'argument courant est un pipe
+        if (argv[i] != NULL && strcmp(argv[i], "|") == 0)
         {
             return parse_and_execute_pipe(argc, argv);
         }
     }
-    if (strcmp(argv[0], "For") == 0)
+
+    // Si la première commande est "For", on lance une boucle
+    if (argv[0] != NULL && strcmp(argv[0], "for") == 0)
     {
-
-    loop_options *options = option_struc(argc, argv);
-    return loop_function(argv[3], argv, argc, options);
-
-
-
+        loop_options *options = option_struc(argc, argv);
+        return loop_function(argv[3], argv, argc, options);
     }
 
-    // Commande externe
+    // Commande externe : appel à la fonction pour exécuter la commande simple
     return parse_and_execute_simple(argc, argv);
 }
