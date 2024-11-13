@@ -1,4 +1,3 @@
-
 #ifndef LOOP_H
 #define LOOP_H
 
@@ -16,8 +15,18 @@
 
 #define MAX_LENGTH 1024
 
+typedef struct {
+    bool opt_A;
+    bool opt_r;
+    char *ext;
+    char *type;
+    int max;
+} loop_options;
+
+
 int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var);
 char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size);
-int loop_function(char *path, char *argv[], size_t size_of_tab);
-
-#endif 
+loop_options * init_struc() ;
+loop_options * option_struc(int argc, char *argv[]);
+int loop_function(char *path, char *argv[], size_t size_of_tab,loop_options * options);
+#endif
