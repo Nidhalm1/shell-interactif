@@ -51,7 +51,13 @@ char **argv(char *input)
         args[i] = strdup(arg);
         if (args[i] == NULL)
         {
-            goto error;
+            for (int j = 0; j < i; j++)
+            {
+                free(args[j]);
+            }
+            free(args);
+            free(input_copy);
+            return NULL;
         }
         arg = strtok(NULL, " ");
         i++;
@@ -59,16 +65,18 @@ char **argv(char *input)
     args[i] = NULL;
     free(input_copy);
     return args;
+}
 
-error: // free tout en cas d'erreur
-    perror("strdup");
-    free(input_copy);
-    for (int index = 0; index < i; index++)
+void free_args(char **args)
+{
+    if (args)
     {
-        free(args[index]);
+        for (int i = 0; args[i] != NULL; i++)
+        {
+            free(args[i]);
+        }
+        free(args);
     }
-    free(args);
-    return NULL;
 }
 
 int main()
@@ -76,6 +84,7 @@ int main()
     signal(SIGINT, sigint_handler);  // Ignorer SIGINT
     signal(SIGTERM, sigint_handler); // Ignorer SIGTERM
     int last_return_code = 0;
+    char **s;
 
     while (1)
     {
@@ -85,32 +94,37 @@ int main()
         {
             return last_return_code; // Quitter si l'utilisateur saisit Ctrl-D
         }
-        char **s = argv(input);
-        if (s[0] && strcmp(s[0], "exit") == 0) // Vérifier si s[0] est valide
+        if (input != NULL)
         {
-            free(input); // Libérer la mémoire allouée pour l'entrée
-            if (s[1] == NULL)
+            s = argv(input);
+            if (s[0] && strcmp(s[0], "exit") == 0) // Vérifier si s[0] est valide
             {
-                return last_return_code; // Quitte le shell avec le code 0
+                free(input); // Libérer la mémoire allouée pour l'entrée
+                if (s[1] == NULL)
+                {
+                    free_args(s);
+                    return last_return_code; // Quitte le shell avec le code 0
+                }
+                else if (s[1] != NULL)
+                {
+                    int exit_code = atoi(s[1]);
+                    free_args(s);
+                    return exit_code; // Quitte le shell avec le code passé en argument
+                }
             }
-            else if (s[1] != NULL)
-            {
-                return atoi(s[1]); // Quitte le shell avec le code passé en argument
-            }
-            else
-            {
-                return 1; // Code de retour par défaut si aucun argument n'est passé
-            }
+            free_args(s);
         }
 
-        if (strcmp(input, "") == 0)
+        if (input != NULL && strcmp(input, "") == 0)
         {
+            free(input);
             continue;
         }
-
+        char **args = argv(input);
         // Parser et exécuter la commande
-        last_return_code = parse_and_execute(argc(input), argv(input));
+        last_return_code = parse_and_execute(argc(input), args);
         free(input);
+        free_args(args);
     }
 
     return 0;
