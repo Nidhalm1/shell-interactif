@@ -9,7 +9,6 @@
 #include "../include/command.h" // Si printerr est déclarée ici
 #include <errno.h>
 
-int execute_piped_command(const char *command, int fd0, int fd1, char **argv);
 
 int parse_and_execute_pipe(int argc, char **argv)
 {
@@ -51,7 +50,7 @@ int parse_and_execute_pipe(int argc, char **argv)
         }
 
         // Exécute la commande avec les bons descripteurs
-        int val = execute_piped_command(s[0], fd_in, (i + j < len) ? pipefd[1] : STDOUT_FILENO, s);
+        int val = execute_command(s[0], fd_in, (i + j < len) ? pipefd[1] : STDOUT_FILENO, s);
         if (val != 0)
         {
             return val;
@@ -76,47 +75,4 @@ int parse_and_execute_pipe(int argc, char **argv)
         close(fd_in);
 
     return 0;
-}
-
-int execute_piped_command(const char *command, int fd0, int fd1, char **argv)
-{
-    pid_t pid = fork();
-    if (pid == 0)
-    { // Processus enfant
-        if (fd0 != STDIN_FILENO)
-        {
-            dup2(fd0, STDIN_FILENO);
-            close(fd0);
-        }
-        if (fd1 != STDOUT_FILENO)
-        {
-            dup2(fd1, STDOUT_FILENO);
-            close(fd1);
-        }
-        execvp(command, argv);
-        perror(command); // Affiche une erreur si execvp échoue
-        exit(1);
-    }
-    else if (pid < 0)
-    { // Erreur de fork
-        perror("fork");
-        return 1;
-    }
-    else
-    { // Processus parent
-        int status;
-        waitpid(pid, &status, 0);
-        if (WIFEXITED(status))
-        {
-            return WEXITSTATUS(status);
-        }
-        else
-        {
-            if (WIFSIGNALED(status))
-            { // Si l'enfant s'est terminé de manière anormale (par signal)
-                return 2;
-            }
-            return 1;
-        }
-    }
 }

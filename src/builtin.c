@@ -47,6 +47,7 @@ int builtin_cd(const char *path)
     if (chdir(path) == -1)
     {
         printt(strerror(errno));
+        printt("\n");
         return 1;
     }
     setenv("OLDPWD", current_dir, 1);

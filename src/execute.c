@@ -12,19 +12,28 @@
 #include <errno.h>
 #include "../include/command.h"
 
-int execute_command(const char *command, char **argv)
+int execute_command(const char *command, int fd0, int fd1, char **argv)
 {
     pid_t pid = fork();
     if (pid == 0)
     { // Processus enfant
+        if (fd0 != STDIN_FILENO)
+        {
+            dup2(fd0, STDIN_FILENO);
+            close(fd0);
+        }
+        if (fd1 != STDOUT_FILENO)
+        {
+            dup2(fd1, STDOUT_FILENO);
+            close(fd1);
+        }
         execvp(command, argv);
+        perror(command); // Affiche une erreur si execvp échoue
         exit(1);
     }
     else if (pid < 0)
     { // Erreur de fork
-        printt("Error executing command: ");
-        printt(command);
-        printt(strerror(errno));
+        perror("fork");
         return 1;
     }
     else

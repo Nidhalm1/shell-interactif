@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "../include/execute.h"
 #include "../include/builtin.h" // Si les fonctions builtin_* sont déclarées ici
 #include "../include/command.h" // Si printerr est déclarée ici
@@ -63,5 +64,5 @@ int parse_and_execute_simple(int argc, char **argv)
 
     // Commande externe
 
-    return execute_command(argv[0], argv);
+    return execute_command(argv[0],STDIN_FILENO,STDOUT_FILENO, argv);
 }

@@ -12,6 +12,7 @@
 #include "../include/loop.h"
 #include <bits/getopt_core.h>
 #include <../include/builtin.h>
+#include <../include/parser.h>
 
 loop_options *init_struc()
 {
@@ -188,40 +189,5 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var)
             argv[i] = replace_var;
         }
     }
-
-    pid_t proc = fork();
-    if (proc == -1)
-    {
-        perror("Erreur lors du fork");
-        return 1;
-    }
-
-    if (proc == 0) // Processus enfant
-    {
-        if (strcmp(argv[0], "ftype") == 0)
-        {
-            exit(builtin_ftype(argv[1]));
-        }
-
-        if (execvp(argv[0], argv) == -1)
-        {
-            perror("Erreur lors de l'exécution de la commande");
-            exit(1);
-        }
-    }
-    else // Processus parent
-    {
-        int status;
-        waitpid(proc, &status, 0);
-        if (WIFEXITED(status))
-        {
-            return WEXITSTATUS(status);
-        }
-        else if (WIFSIGNALED(status))
-        {
-            return 2;
-        }
-    }
-
-    return 0;
+    return parse_and_execute(size_of_tab, argv);
 }
