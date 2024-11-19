@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "../include/piped_commands.h"
+#include "../include/if_function.h"
 
 int parse_and_execute(int argc, char **argv)
 {
@@ -39,6 +40,12 @@ int parse_and_execute(int argc, char **argv)
     {
         loop_options *options = option_struc(argc, argv);
         return loop_function(argv[3], argv, argc, options);
+    }
+
+    if (argv[0] != NULL && strcmp(argv[0], "if") == 0)
+    {
+        // TODO : Implémenter la commande if
+        return if_function(argc, argv);
     }
 
     // Commande externe : appel à la fonction pour exécuter la commande simple
