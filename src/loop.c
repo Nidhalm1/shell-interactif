@@ -180,14 +180,19 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     return 0;
 }
 
-int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var)
+void replace_variables(char *argv[], size_t size_of_tab, char *replace_var)
 {
     for (size_t i = 0; i < size_of_tab; i++)
     {
-        if (strcmp(argv[i], "$F") == 0)
+        if (argv[i][0] == '$')
         {
             argv[i] = replace_var;
         }
     }
+}
+
+int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var)
+{
+    replace_variables(argv, size_of_tab, replace_var);
     return parse_and_execute(size_of_tab, argv);
 }
