@@ -13,6 +13,8 @@
 #include <bits/getopt_core.h>
 #include <../include/builtin.h>
 #include <../include/parser.h>
+#include <../include/execute.h>
+#include <../include/command.h>
 
 loop_options *init_struc()
 {
@@ -95,7 +97,7 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
     char **cmd = malloc((size_of_cmd + 1) * sizeof(char *));
     if (cmd == NULL)
     {
-        perror("Erreur d'allocation mémoire pour cmd");
+        printerr("Erreur d'allocation mémoire pour cmd");
         exit(EXIT_FAILURE);
     }
 
@@ -126,14 +128,14 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 {
     if (options == NULL)
     {
-        fprintf(stderr, "Option non reconnue.\n");
+        printerr("Option non reconnue.\n");
         return 1;
     }
 
     DIR *dirp = opendir(path);
     if (dirp == NULL)
     {
-        perror("Erreur d'ouverture du répertoire");
+        printerr("Erreur d'ouverture du répertoire");
         return 1;
     }
 

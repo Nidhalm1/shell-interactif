@@ -88,7 +88,7 @@ int if_function(int argc, char **argv)
 {
     if (argc < 4)
     {
-        printt("Usage : if TEST cmd1 [else cmd2]\n");
+        printerr("Usage : if TEST cmd1 [else cmd2]\n");
         return 1;
     }
 
@@ -99,7 +99,7 @@ int if_function(int argc, char **argv)
     char *cmd1 = find_cmd(argv, argc, &start_index);
     if (cmd1 == NULL)
     {
-        printt("Erreur : Commande non trouvée pour le if.\n");
+        printerr("Erreur : Commande non trouvée pour le if.\n");
         return 1;
     }
 
@@ -119,7 +119,7 @@ int if_function(int argc, char **argv)
             char *cmd2 = find_cmd(argv, argc, &start_index);
             if (cmd2 == NULL)
             {
-                printt("Erreur : Commande non trouvée pour le else.\n");
+                printerr("Erreur : Commande non trouvée pour le else.\n");
                 free(cmd1);
                 return 1;
             }
