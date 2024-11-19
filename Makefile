@@ -10,7 +10,7 @@ TARGET = fsh
 SRC_DIR = src
 
 # Liste des fichiers sources
-SRCS = $(SRC_DIR)/fsh.c $(SRC_DIR)/execute.c $(SRC_DIR)/parser.c $(SRC_DIR)/prompt.c $(SRC_DIR)/command.c $(SRC_DIR)/builtin.c $(SRC_DIR)/simple_commands.c $(SRC_DIR)/piped_commands.c $(SRC_DIR)/loop.c $(SRC_DIR)/if_function.c
+SRCS = $(SRC_DIR)/fsh.c $(SRC_DIR)/execute.c $(SRC_DIR)/parser.c $(SRC_DIR)/prompt.c $(SRC_DIR)/command.c $(SRC_DIR)/builtin.c $(SRC_DIR)/simple_commands.c $(SRC_DIR)/piped_commands.c $(SRC_DIR)/loop.c $(SRC_DIR)/if_function.c $(SRC_DIR)/structured_command.c
 
 # Règle par défaut pour compiler l'exécutable
 all: $(TARGET)

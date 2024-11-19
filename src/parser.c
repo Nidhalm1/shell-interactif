@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "../include/piped_commands.h"
 #include "../include/if_function.h"
+#include "../include/structured_command.h"
 
 int parse_and_execute(int argc, char **argv)
 {
@@ -32,6 +33,16 @@ int parse_and_execute(int argc, char **argv)
         if (argv[i] != NULL && strcmp(argv[i], "|") == 0)
         {
             return parse_and_execute_pipe(argc, argv);
+        }
+    }
+
+    // Parcours des arguments pour détecter une structure de commande
+    for (int i = 0; i < argc; i++)
+    {
+        // Vérifie si l'argument courant est un point-virgule
+        if (argv[i] != NULL && strcmp(argv[i], ";") == 0)
+        {
+            return parse_and_execute_structured(argc, argv);
         }
     }
 
