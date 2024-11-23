@@ -10,7 +10,6 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include "../include/loop.h"
-#include <bits/getopt_core.h>
 #include <../include/builtin.h>
 #include <../include/parser.h>
 #include <../include/execute.h>
@@ -141,14 +140,19 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 
     struct dirent *entry;
     struct stat st;
-    int count = 0;
     char **cmd = NULL;
     size_t cmd_size = 0;
 
     cmd = get_cmd(argv, size_of_tab, &cmd_size);
 
+    int nb_process_runned  = 0;
     while ((entry = readdir(dirp)) != NULL)
     {
+        if (!options->opt_A && entry->d_name[0] == '.')
+        {
+            continue;
+        }
+
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         {
             continue;
@@ -165,15 +169,59 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 
         if (options->opt_r && S_ISDIR(st.st_mode))
         {
-            count += loop_function(path_file, argv, size_of_tab, options);
+            loop_function(path_file, argv, size_of_tab, options);
+            continue;
         }
-        else if (S_ISREG(st.st_mode))
+
+        if (options->ext != NULL)
         {
-            int res = ex_cmd(cmd, cmd_size, path_file);
-            if (res == 0)
+            char *ext = get_ext(entry->d_name);
+            if (ext == NULL || strcmp(ext, options->ext) != 0)
             {
-                count++;
+                free(ext);
+                continue;
             }
+            free(ext);
+        }
+
+        if (options->type != NULL)
+        {
+            if ((strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) ||
+                (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) ||
+                (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) ||
+                (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)))
+            {
+                continue;
+            }
+        }
+
+        if (options->max > 0 && nb_process_runned >= options->max)
+        {
+            wait(NULL);
+            nb_process_runned --;
+        }
+
+       pid_t p = fork();
+
+        switch (p)
+        {
+        case -1:
+            perror("Erreur lors du fork");
+            break;
+
+        case 0:
+            ex_cmd(cmd, cmd_size, path_file);
+            exit(EXIT_SUCCESS);
+
+        default:
+            nb_process_runned++;
+            break;
+        }
+
+        while (nb_process_runned > 0)
+        {
+        wait(NULL);
+        nb_process_runned--;
         }
     }
 
@@ -182,19 +230,62 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     return 0;
 }
 
+
 void replace_variables(char *argv[], size_t size_of_tab, char *replace_var)
 {
-    for (size_t i = 0; i < size_of_tab; i++)
-    {
-        if (argv[i][0] == '$')
+        for (size_t i = 0; i < size_of_tab; i++)
         {
-            argv[i] = replace_var;
+            if (argv[i][0] == '$')
+            {
+                argv[i] = replace_var;
+            }
         }
     }
-}
+
+
 
 int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var)
 {
     replace_variables(argv, size_of_tab, replace_var);
     return parse_and_execute(size_of_tab, argv);
 }
+
+
+char * get_ext(const char *val) {
+
+    char *cpy = strdup(val);
+    if (cpy == NULL) {
+        return NULL;
+    }
+
+    char *token = strtok(cpy, ".");
+    char *save = NULL;
+
+    while (token != NULL) {
+        save = token;
+        token = strtok(NULL, ".");
+    }
+
+    char *ext = save ? strdup(save) : NULL;
+    free(cpy);
+    return ext;
+}
+
+char *remove_ext(const char *file) {
+    if (file == NULL) {
+        return NULL;
+    }
+    const char *last_dot = strrchr(file, '.');
+    if (last_dot == NULL || last_dot == file) {
+        return strdup(file);
+    }
+    size_t new_file_length = last_dot - file;
+    char *new_file= malloc(new_file_length + 1);
+    if (new_file == NULL) {
+        return NULL;
+    }
+    strncpy(new_file, file, new_file_length);
+    new_file[new_file_length] = '\0';
+    return new_file;
+}
+
