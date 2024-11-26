@@ -7,6 +7,13 @@
 #include "../include/piped_commands.h"
 #include "../include/parser.h"
 
+/**
+ * @brief Parse et exécute une commande structurée
+ *
+ * @param argc Nombre d'arguments
+ * @param argv Tableau d'arguments
+ * @return int Code de retour de la commande
+ */
 int parse_and_execute_structured(int argc, char **argv)
 {
     int status = 0;

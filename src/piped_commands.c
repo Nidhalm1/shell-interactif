@@ -9,6 +9,13 @@
 #include "../include/command.h" // Si printerr est déclarée ici
 #include <errno.h>
 
+/**
+ * @brief Parse et exécute une commande avec pipe
+ *
+ * @param argc Nombre d'arguments
+ * @param argv Tableau d'arguments
+ * @return int Code de retour de la commande
+ */
 int parse_and_execute_pipe(int argc, char **argv)
 {
     int fd_in = STDIN_FILENO; // Initialement, l'entrée est le stdin

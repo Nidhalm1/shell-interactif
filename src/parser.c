@@ -13,6 +13,13 @@
 #include "../include/if_function.h"
 #include "../include/structured_command.h"
 
+/**
+ * @brief Parse et exécute une commande
+ *
+ * @param argc Nombre d'arguments
+ * @param argv Tableau d'arguments
+ * @return int Code de retour de la commande
+ */
 int parse_and_execute(int argc, char **argv)
 {
     // Si aucun argument n'est passé, on sort immédiatement

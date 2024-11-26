@@ -8,6 +8,14 @@
 #include "../include/loop.h"
 #include <sched.h>
 
+/**
+ * @brief Trouve la commande entre les accolades
+ *
+ * @param argv Tableau d'arguments
+ * @param size_of_tab Taille du tableau d'arguments
+ * @param start_index Index de départ
+ * @return char* Commande trouvée
+ */
 char *find_cmd(char *argv[], size_t size_of_tab, size_t *start_index)
 {
     size_t size_of_cmd = 0;
@@ -68,6 +76,12 @@ char *find_cmd(char *argv[], size_t size_of_tab, size_t *start_index)
     return cmd;
 }
 
+/**
+ * @brief Exécute une commande de test
+ *
+ * @param cmd Commande à exécuter
+ * @return int Code de retour de la commande
+ */
 int exec_test(char *cmd)
 {
     char *args[128];
@@ -84,6 +98,13 @@ int exec_test(char *cmd)
     return parse_and_execute(i, args);
 }
 
+/**
+ * @brief Fonction qui gère la commande if
+ *
+ * @param argc Nombre d'arguments
+ * @param argv Tableau d'arguments
+ * @return int Code de retour de la commande
+ */
 int if_function(int argc, char **argv)
 {
     if (argc < 4)

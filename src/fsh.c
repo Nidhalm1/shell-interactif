@@ -14,6 +14,12 @@ void sigint_handler(int sig)
     // Peut-être ajouter un message si interruption souhaitée
 }
 
+/**
+ * @brief Compte le nombre d'arguments dans une chaîne de caractères
+ *
+ * @param input Chaîne de caractères
+ * @return int Nombre d'arguments
+ */
 int argc(char *input)
 {
     int count = 0;
@@ -27,7 +33,13 @@ int argc(char *input)
     }
     return count + 1;
 }
-/*faudra enlevr les guillment des mots si y en a */
+
+/**
+ * @brief Crée un tableau d'arguments à partir d'une chaîne de caractères
+ *
+ * @param input Chaîne de caractères
+ * @return char** Tableau d'arguments
+ */
 char **argv(char *input)
 {
     int arg_count = argc(input);
@@ -67,6 +79,11 @@ char **argv(char *input)
     return args;
 }
 
+/**
+ * @brief Libère la mémoire allouée pour les arguments
+ *
+ * @param args Tableau d'arguments
+ */
 void free_args(char **args)
 {
     if (args)
@@ -79,6 +96,11 @@ void free_args(char **args)
     }
 }
 
+/**
+ * @brief Fonction principale du shell
+ *
+ * @return int Code de retour du shell
+ */
 int main()
 {
     signal(SIGINT, sigint_handler);  // Ignorer SIGINT
@@ -94,7 +116,7 @@ int main()
         {
             return last_return_code; // Quitter si l'utilisateur saisit Ctrl-D
         }
-        args= argv(input);
+        args = argv(input);
         if (input != NULL)
         {
             if (args[0] && (strcmp(args[0], "exit") == 0)) // Vérifier si args[0] est valide

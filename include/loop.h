@@ -15,7 +15,8 @@
 
 #define MAX_LENGTH 1024
 
-typedef struct {
+typedef struct
+{
     bool opt_A;
     bool opt_r;
     char *ext;
@@ -23,12 +24,11 @@ typedef struct {
     int max;
 } loop_options;
 
-
 int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var);
 char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size);
-char * get_ext(const char *val);
+char *get_ext(const char *val);
 char *remove_ext(const char *file);
-loop_options * init_struc() ;
-loop_options * option_struc(int argc, char *argv[]);
-int loop_function(char *path, char *argv[], size_t size_of_tab,loop_options * options);
+loop_options *init_struc();
+loop_options *option_struc(int argc, char *argv[]);
+int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *options);
 #endif
