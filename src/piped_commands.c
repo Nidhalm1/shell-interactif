@@ -22,7 +22,7 @@ int parse_and_execute_pipe(int argc, char **argv)
     int pipefd[2];            // Pipe pour communication
     int len = argc;
     int i = 0;
-
+    
     while (i < len)
     {
         char **s = malloc((len - i + 1) * sizeof(char *)); // Ajustement de la taille
