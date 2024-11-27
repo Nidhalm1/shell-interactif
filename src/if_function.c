@@ -113,8 +113,47 @@ int if_function(int argc, char **argv)
         return 1;
     }
 
+    // Construire la condition (TEST) à partir des arguments avant '{'
+    size_t test_size = 0;
+    for (size_t i = 1; i < (size_t)argc; i++)
+    {
+        if (strcmp(argv[i], "{") == 0)
+        {
+            break;
+        }
+        test_size += strlen(argv[i]) + 1;
+    }
+
+    if (test_size == 0)
+    {
+        printerr("Erreur : Condition de test non trouvée.\n");
+        return 1;
+    }
+
+    char *test_cmd = malloc(test_size * sizeof(char));
+    if (test_cmd == NULL)
+    {
+        printerr("Erreur d'allocation mémoire pour test_cmd\n");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t parc = 0;
+    for (size_t i = 1; i < (size_t)argc; i++)
+    {
+        if (strcmp(argv[i], "{") == 0)
+        {
+            break;
+        }
+        if (parc > 0)
+            test_cmd[parc++] = ' ';
+        strcpy(&test_cmd[parc], argv[i]);
+        parc += strlen(argv[i]);
+    }
+    test_cmd[parc] = '\0';
+
     // Exécuter la condition (TEST)
-    int test = exec_test(argv[1]);
+    int test = exec_test(test_cmd);
+    free(test_cmd);
 
     size_t start_index = 2;
     char *cmd1 = find_cmd(argv, argc, &start_index);
