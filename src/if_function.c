@@ -90,7 +90,7 @@ char *find_cmd(char *argv[], size_t size_of_tab, size_t *start_index)
             }
         }
     }
-    cmd[parc] = '\0';
+    cmd[parc - 1] = '\0';
     return cmd;
 }
 
