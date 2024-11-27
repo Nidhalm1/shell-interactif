@@ -6,6 +6,13 @@
 #include "../include/builtin.h" // Si les fonctions builtin_* sont déclarées ici
 #include "../include/command.h" // Si printerr est déclarée ici
 
+/**
+ * @brief Parse et exécute une commande simple
+ *
+ * @param argc Nombre d'arguments
+ * @param argv Tableau d'arguments
+ * @return int Code de retour de la commande
+ */
 int parse_and_execute_simple(int argc, char **argv)
 {
     // Commandes internes
@@ -64,5 +71,5 @@ int parse_and_execute_simple(int argc, char **argv)
 
     // Commande externe
 
-    return execute_command(argv[0],STDIN_FILENO,STDOUT_FILENO, argv);
+    return execute_command(argv[0], STDIN_FILENO, STDOUT_FILENO, argv);
 }

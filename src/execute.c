@@ -13,6 +13,15 @@
 #include "../include/command.h"
 #include <fcntl.h>
 
+/**
+ * @brief Exécute une commande externe
+ *
+ * @param command Commande à exécuter
+ * @param fd0 Descripteur de fichier pour l'entrée
+ * @param fd1 Descripteur de fichier pour la sortie
+ * @param argv Arguments de la commande
+ * @return int Code de retour de la commande
+ */
 int execute_command(const char *command, int fd0, int fd1, char **argv)
 {
     int fd2 = STDERR_FILENO; // pour les erreurs

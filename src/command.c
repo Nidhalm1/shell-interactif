@@ -8,6 +8,12 @@
 
 #include <unistd.h>
 
+/**
+ * @brief Fonction qui affiche un message sur la sortie standard
+ *
+ * @param input le text a afficher
+ * @return int 0 si tout c'est bien passé, -1 sinon
+ */
 int printt(const char *input)
 {
     if (write(STDOUT_FILENO, input, strlen(input)) == -1)
@@ -17,6 +23,13 @@ int printt(const char *input)
     }
     return 0;
 }
+
+/**
+ * @brief Fonction qui affiche un message sur la sortie d'erreur
+ *
+ * @param input le text a afficher
+ * @return int 0 si tout c'est bien passé, -1 sinon
+ */
 int printerr(char *input)
 {
     if (write(STDERR_FILENO, input, strlen(input)) == -1)
@@ -26,5 +39,3 @@ int printerr(char *input)
     }
     return 0;
 }
-
-// Vous pouvez ajouter des fonctions liées aux commandes ici

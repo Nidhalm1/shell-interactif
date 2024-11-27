@@ -6,6 +6,12 @@
 #include <string.h>
 #include "../include/command.h"
 
+/**
+ * @brief Récupère le répertoire courant
+ *
+ * @param buffer Buffer pour stocker le répertoire
+ * @param size Taille du buffer
+ */
 void get_current_directory(char *buffer, size_t size)
 {
     if (getcwd(buffer, size) == NULL)
@@ -13,6 +19,12 @@ void get_current_directory(char *buffer, size_t size)
         printerr("Error: Unable to get current directory\n");
     }
 }
+
+/**
+ * @brief Tronque le répertoire pour l'affichage
+ *
+ * @param dir Répertoire à tronquer
+ */
 void troncate(char *dir)
 {
     int len = strlen(dir);
@@ -25,6 +37,12 @@ void troncate(char *dir)
     }
 }
 
+/**
+ * @brief Affiche le prompt
+ *
+ * @param last_return_code Dernier code de retour
+ * @return char* Commande saisie
+ */
 char *prompt(int last_return_code)
 {
     char color[10];

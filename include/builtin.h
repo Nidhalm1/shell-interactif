@@ -7,5 +7,4 @@ int builtin_pwd(void);
 int builtin_cd(const char *path);
 int builtin_ftype(const char *filename);
 
-
 #endif // BUILTIN_H

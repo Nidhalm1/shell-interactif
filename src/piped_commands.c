@@ -9,7 +9,13 @@
 #include "../include/command.h" // Si printerr est déclarée ici
 #include <errno.h>
 
-
+/**
+ * @brief Parse et exécute une commande avec pipe
+ *
+ * @param argc Nombre d'arguments
+ * @param argv Tableau d'arguments
+ * @return int Code de retour de la commande
+ */
 int parse_and_execute_pipe(int argc, char **argv)
 {
     int fd_in = STDIN_FILENO; // Initialement, l'entrée est le stdin
@@ -30,9 +36,12 @@ int parse_and_execute_pipe(int argc, char **argv)
         // Crée une sous-commande jusqu'à trouver un '|'
         for (int k = i; k < len; k++)
         {
-            if (strcmp(argv[k], "|") == 0)
+            if (argv[k] != NULL)
             {
-                break;
+                if (strcmp(argv[k], "|") == 0)
+                {
+                    break;
+                }
             }
             s[j++] = argv[k];
         }
