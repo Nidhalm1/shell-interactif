@@ -30,7 +30,7 @@ char *find_cmd(char *argv[], size_t size_of_tab, size_t *start_index)
             if (brace_count == 1)
             {
                 find = true;
-                continue; // Skip the first opening brace
+                continue; // passer la première accolade ouvrante
             }
         }
         if (find)
@@ -39,7 +39,7 @@ char *find_cmd(char *argv[], size_t size_of_tab, size_t *start_index)
         }
         if (strcmp(argv[i], "}") == 0 && find)
         {
-            brace_count--;
+            brace_count--; // décrémenter le compteur d'accolades
             if (brace_count == 0)
             {
                 break;
@@ -70,15 +70,15 @@ char *find_cmd(char *argv[], size_t size_of_tab, size_t *start_index)
             if (brace_count == 1)
             {
                 find = true;
-                continue; // Skip the first opening brace
+                continue; // passer la première accolade ouvrante
             }
         }
         if (find)
         {
             if (parc > 0)
                 cmd[parc++] = ' ';
-            strcpy(&cmd[parc], argv[i]);
-            parc += strlen(argv[i]);
+            strcpy(&cmd[parc], argv[i]); // copier l'argument
+            parc += strlen(argv[i]);     // incrémenter le parcours
         }
         if (strcmp(argv[i], "}") == 0 && find)
         {
@@ -90,7 +90,7 @@ char *find_cmd(char *argv[], size_t size_of_tab, size_t *start_index)
             }
         }
     }
-    cmd[parc - 1] = '\0';
+    cmd[parc - 1] = '\0'; // supprimer le dernier caractère
     return cmd;
 }
 
@@ -175,7 +175,6 @@ int if_function(int argc, char **argv)
 
     size_t start_index = 0;
     char *cmd1 = find_cmd(argv, argc, &start_index);
-    printf("cmd1: %s\n", cmd1);
     if (cmd1 == NULL)
     {
         printerr("Erreur : Commande non trouvée pour le if.\n");
