@@ -121,6 +121,15 @@ int main()
         {
             if (args[0] && (strcmp(args[0], "exit") == 0)) // Vérifier si args[0] est valide
             {
+                if (args[2] != NULL){
+
+                    printerr("exit: too many arguments\n");
+                    free(input); // Libérer la mémoire allouée pour l'entrée
+                    free_args(args);
+                    last_return_code = 1;
+                    continue;
+
+                }
                 free(input); // Libérer la mémoire allouée pour l'entrée
                 if (args[1] == NULL)
                 {

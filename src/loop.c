@@ -277,11 +277,44 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
  */
 void replace_variables(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 {
+    size_t var_len = strlen(loop_var);
+    char var_placeholder[256];
+    snprintf(var_placeholder, sizeof(var_placeholder), "$%s", loop_var);
+
     for (size_t i = 0; i < size_of_tab; i++)
     {
-        if (argv[i][0] == '$' && strcmp(&argv[i][1], loop_var) == 0)
+        char *pos = strstr(argv[i], var_placeholder);
+        while (pos != NULL)
         {
-            argv[i] = replace_var;
+            // Calculer la nouvelle taille nécessaire
+            size_t before_len = pos - argv[i];
+            size_t after_len = strlen(pos + var_len + 1);
+            size_t new_len = before_len + strlen(replace_var) + after_len + 1;
+
+            char *new_arg = malloc(new_len);
+            if (new_arg == NULL)
+            {
+                printerr("Erreur d'allocation mémoire pour la variable remplacée\n");
+                exit(EXIT_FAILURE);
+            }
+
+            // Copier la partie avant la variable
+            strncpy(new_arg, argv[i], before_len);
+            new_arg[before_len] = '\0';
+
+            // Ajouter la valeur de remplacement
+            strcat(new_arg, replace_var);
+
+            // Ajouter la partie après la variable
+            strcat(new_arg, pos + var_len + 1);
+
+            // Remplacer l'argument original
+            free(argv[i]);
+            argv[i] = strdup(new_arg);
+            free(new_arg);
+
+            // Rechercher d'autres occurrences dans le même argument
+            pos = strstr(argv[i], var_placeholder);
         }
     }
 }
