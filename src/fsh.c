@@ -23,15 +23,24 @@ void sigint_handler(int sig)
 int argc(char *input)
 {
     int count = 0;
+    int i = 0;
     int len = strlen(input);
-    for (int i = 0; i < len; i++)
+    while (i < len)
     {
-        if (input[i] == ' ')
+        while (i < len && input[i] == ' ')
+        {
+            i++;
+        }
+        if (i < len && input[i] != ' ')
         {
             count++;
+            while (i < len && input[i] != ' ')
+            {
+                i++;
+            }
         }
     }
-    return count + 1;
+    return count;
 }
 
 /**
@@ -49,34 +58,39 @@ char **argv(char *input)
         perror("malloc");
         return NULL;
     }
-    char *input_copy = strdup(input);
-    if (input_copy == NULL)
-    {
-        perror("strdup");
-        free(args); // Libérer args si strdup échoue
-        return NULL;
-    }
-    char *arg = strtok(input_copy, " ");
-    int i = 0;
-    while (arg != NULL)
-    {
-        args[i] = strdup(arg);
+
+    int ind = 0;
+    for (size_t i = 0; i < arg_count; i++){
+
+        while (input[ind] == ' '){
+            ind++;
+        }
+
+        int start = ind;
+
+        while (input[ind] != ' ' && input[ind] != '\0'){
+            ind++;
+        }
+
+        int len = ind - start;
+        args[i] = malloc((len + 1) * sizeof(char));
         if (args[i] == NULL)
         {
-            for (int j = 0; j < i; j++)
-            {
-                free(args[j]);
-            }
-            free(args);
-            free(input_copy);
+            perror("malloc");
+            free_args(args);
             return NULL;
         }
-        arg = strtok(NULL, " ");
-        i++;
+
+        strncpy(args[i], input + start, len);
+        args[i][len] = '\0';
+
+        
+
     }
-    args[i] = NULL;
-    free(input_copy);
+
+    args[arg_count] = NULL;
     return args;
+    
 }
 
 /**
