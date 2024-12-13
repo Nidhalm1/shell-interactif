@@ -73,12 +73,6 @@ int parse_and_execute_simple(int argc, char **argv)
         }
     }
 
-    else if (strcmp(argv[0], "for") == 0)
-    {
-        // TODO : Implémenter la commande for
-        return 0;
-    }
-
     // Commande externe
 
     return execute_command(argv[0], STDIN_FILENO, STDOUT_FILENO, argv);

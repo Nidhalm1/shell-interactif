@@ -42,7 +42,6 @@ int parse_and_execute(int argc, char **argv)
 
     if (argv[0] != NULL && strcmp(argv[0], "if") == 0)
     {
-        // TODO : Implémenter la commande if
         return if_function(argc, argv);
     }
 
