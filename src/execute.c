@@ -118,7 +118,7 @@ int execute_command(const char *command, int fd0, int fd1, char **argv)
             }
             else
             {
-                fd2 = open(argv[fichierErr], O_WRONLY | O_CREAT | O_EXCL, 0644);
+                fd2 = open(argv[fichierErr], O_WRONLY | O_CREAT | O_EXCL, 0777);
             }
             if (fd2 == -1)
             {

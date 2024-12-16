@@ -183,7 +183,7 @@ void execute_commandd(const char *result, int fd0, int fd1, char **argv)
         }
         if (fd2 == -1)
         {
-            perror("Erreur d'ouverture du fichier d'erreur");
+            fprintf(stderr, "Erreur d'ouverture du fichier d'erreur: %s\n", strerror(errno));
             exit(1);
         }
     }
