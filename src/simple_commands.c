@@ -18,24 +18,27 @@ int parse_and_execute_simple(int argc, char **argv)
     // Commandes internes
     if (strcmp(argv[0], "pwd") == 0)
     {
-        if (argc > 2) // genrer le cas de PWD -P
+        if (!contientRedi(argv, argc))//elle contient pas des redirections
         {
-            printerr("pwd: too many arguments\n");
-            return 1; // Code d'erreur
-        }
-        else if (argc == 2)
-        {
-            if (strcmp(argv[1], "-P") != 0)
+            if (argc > 2)
             {
-                printerr("pwd: ");
-                printerr(argv[1]);
-                printerr(": invalid argument\n");
-                return 1;
+                printerr("pwd: too many arguments\n");
+                return 1; // Code d'erreur
+            }
+            if (argc == 2)
+            {
+                if (strcmp(argv[1], "-p") != 0)
+                {
+                    printerr("pwd: ");
+                    printerr(argv[1]);
+                    printerr(": invalid␣argument\n");
+                    return 1;
+                }
+                return builtin_pwd(argv);
             }
         }
-        else
-        {
-            return builtin_pwd();
+        else{
+
         }
     }
     else if (strcmp(argv[0], "cd") == 0)

@@ -7,6 +7,7 @@
 #include "../include/execute.h"
 #include "../include/prompt.h"
 #include "../include/command.h"
+#include <stdbool.h>
 
 void sigint_handler(int sig)
 {
@@ -60,15 +61,18 @@ char **argv(char *input)
     }
 
     int ind = 0;
-    for (size_t i = 0; i < arg_count; i++){
+    for (size_t i = 0; i < arg_count; i++)
+    {
 
-        while (input[ind] == ' '){
+        while (input[ind] == ' ')
+        {
             ind++;
         }
 
         int start = ind;
 
-        while (input[ind] != ' ' && input[ind] != '\0'){
+        while (input[ind] != ' ' && input[ind] != '\0')
+        {
             ind++;
         }
 
@@ -83,14 +87,10 @@ char **argv(char *input)
 
         strncpy(args[i], input + start, len);
         args[i][len] = '\0';
-
-        
-
     }
 
     args[arg_count] = NULL;
     return args;
-    
 }
 
 /**
@@ -109,7 +109,55 @@ void free_args(char **args)
         free(args);
     }
 }
-
+bool contientRedi(char **s, int len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        if (strcmp(s[i], ">") == 0 || strcmp(s[i], "<") == 0 || strcmp(s[i], ">>") == 0 || strcmp(s[i], "2>") == 0 || strcmp(s[i], "2>>") == 0 || strcmp(s[i], ">|") == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+int exitt(char **argv, int argc, int lastReturncode)
+{
+    if (!contientRedi(argv, argc))
+    {
+        if (argc > 2)
+        {
+            printerr("exit: too many arguments\n");
+            free_args(argv);
+            return -13;
+        }
+        if (argv[1] == NULL)
+        {
+            free_args(argv);
+            return lastReturncode; // Quitte le shell avec le code 0
+        }
+        else if (argv[1] != NULL)
+        {
+            int exit_code = atoi(argv[1]);
+            free_args(argv);
+            return exit_code; // Quitte le shell avec le code passé en argument
+        }
+    }
+    else
+    {
+        if (argv[1] == NULL)
+        {
+            free_args(argv);
+            return lastReturncode; // Quitte le shell avec le code 0
+        }
+        else if (argv[1] != NULL)
+        {
+            int exit_code = atoi(argv[1]);
+            free_args(argv);
+            return exit_code; // Quitte le shell avec le code passé en argument
+        }
+    }
+    return 0;
+}
 /**
  * @brief Fonction principale du shell
  *
@@ -130,39 +178,27 @@ int main()
         {
             return last_return_code; // Quitter si l'utilisateur saisit Ctrl-D
         }
+
         args = argv(input);
-        if (input != NULL)
-        {
-            if (args[0] && (strcmp(args[0], "exit") == 0)) // Vérifier si args[0] est valide
-            {
-                if (args[2] != NULL){
-
-                    printerr("exit: too many arguments\n");
-                    free(input); // Libérer la mémoire allouée pour l'entrée
-                    free_args(args);
-                    last_return_code = 1;
-                    continue;
-
-                }
-                free(input); // Libérer la mémoire allouée pour l'entrée
-                if (args[1] == NULL)
-                {
-                    free_args(args);
-                    return last_return_code; // Quitte le shell avec le code 0
-                }
-                else if (args[1] != NULL)
-                {
-                    int exit_code = atoi(args[1]);
-                    free_args(args);
-                    return exit_code; // Quitte le shell avec le code passé en argument
-                }
-            }
-        }
-
         if (input != NULL && strcmp(input, "") == 0)
         {
             free(input);
             continue;
+        }
+        if (input != NULL && strcmp(args[0], "exit") == 0)
+        {
+            int argcc = argc(input);
+            free(input);
+            int ret = exitt(args, argcc, last_return_code);
+            if (ret != -13)
+            {
+                return ret;
+            }
+            else
+            {
+                last_return_code = 1;
+                continue;
+            }
         }
         // Parser et exécuter la commande
         last_return_code = parse_and_execute(argc(input), args);

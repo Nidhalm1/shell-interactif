@@ -36,7 +36,20 @@ void troncate(char *dir, int c)
         dir[i] = '.';
     }
 }
-
+int longueur_int(int n)
+{
+    int longueur = 0;
+    if (n == 0)
+    {
+        return 1;
+    }
+    while (n != 0)
+    {
+        n /= 10;
+        longueur++;
+    }
+    return longueur;
+}
 /**
  * @brief Affiche le prompt
  *
@@ -50,17 +63,12 @@ char *prompt(int last_return_code)
     char color_dir[10];
     char dir[1024];
     get_current_directory(dir, sizeof(dir));
-    if (last_return_code <10){
-    if (strlen(dir) > 25)
+    int len = longueur_int(last_return_code);
+    int longeur = strlen(dir);
+    if (longeur >25)
     {
-        troncate(dir,25);
-    }}
-    else
-    if (strlen(dir) > 25)
-    {
-        troncate(dir,23);
+        troncate(dir, 25 - len + 1);
     }
-
     if (last_return_code == 0)
     {
         strcpy(color, "\001\033[32m\002"); // Green
