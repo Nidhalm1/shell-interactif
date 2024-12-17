@@ -93,7 +93,7 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
     int count = 0;
     size_t start_index = 0;
 
-    // Recherche du bloc de commandes entre accolades
+    // Recherche du début et de la fin du bloc en tenant compte des sous-blocs
     for (size_t i = 0; i < size_of_tab; i++)
     {
         if (strcmp(argv[i], "{") == 0)
@@ -108,27 +108,33 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
         else if (strcmp(argv[i], "}") == 0)
         {
             count--;
-            if (count == 0)
+            if (count == 0) // Fin du premier bloc apparié
             {
-                size_of_cmd = i - start_index;
+                size_of_cmd = i - start_index; // Taille du bloc
                 break;
             }
         }
     }
 
-    // Vérification que les accolades sont appariées
+    // Vérification que les accolades sont correctement appariées
     if (count != 0 || size_of_cmd == 0)
     {
-        return NULL; // Accolades non appariées
+        return NULL; // Accolades non appariées ou bloc vide
     }
 
-    // Allocation et copie des commandes sans les accolades
+    // Allocation et copie des commandes dans un nouveau tableau
     char **cmd = malloc((size_of_cmd + 1) * sizeof(char *));
+    if (cmd == NULL)
+    {
+        perror("malloc");
+        return NULL;
+    }
+
     for (size_t i = 0; i < size_of_cmd; i++)
     {
         cmd[i] = argv[start_index + i];
     }
-    cmd[size_of_cmd] = NULL; // Terminateur de la commande
+    cmd[size_of_cmd] = NULL; // Terminateur du tableau de commandes
 
     *cmd_size = size_of_cmd;
     return cmd;
