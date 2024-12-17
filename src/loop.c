@@ -93,6 +93,7 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
     int count = 0;
     size_t start_index = 0;
 
+    // Recherche du bloc de commandes entre accolades
     for (size_t i = 0; i < size_of_tab; i++)
     {
         if (strcmp(argv[i], "{") == 0)
@@ -104,7 +105,7 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
                 in_block = true;
             }
         }
-        if (strcmp(argv[i], "}") == 0)
+        else if (strcmp(argv[i], "}") == 0)
         {
             count--;
             if (count == 0)
@@ -115,21 +116,22 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
         }
     }
 
+    // Vérification que les accolades sont appariées
     if (count != 0 || size_of_cmd == 0)
     {
         return NULL; // Accolades non appariées
     }
 
+    // Allocation et copie des commandes
     char **cmd = malloc((size_of_cmd + 1) * sizeof(char *));
     for (size_t i = 0; i < size_of_cmd; i++)
     {
         cmd[i] = argv[start_index + i];
     }
-    cmd[size_of_cmd] = NULL; // Terminateur
+    cmd[size_of_cmd] = NULL; // Terminateur de la commande
     *cmd_size = size_of_cmd;
     return cmd;
 }
-
 /**
  * @brief Parcourt un répertoire et exécute des commandes sur les fichiers correspondant aux options
  *
@@ -328,7 +330,9 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 
 {
     replace_variables(argv, size_of_tab, replace_var, loop_var);
-   
+
+    
+
     return parse_and_execute(size_of_tab, argv);
 }
 
