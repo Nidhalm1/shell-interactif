@@ -39,4 +39,3 @@ int printerr(char *input)
     }
     return 0;
 }
-

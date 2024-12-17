@@ -187,46 +187,15 @@ int main()
     signal(SIGTERM, sigint_handler); // Ignorer SIGTERM
     int last_return_code = 0;
     char **args;
-    int fdb0 = STDIN_FILENO;
-    int fdb1 = STDOUT_FILENO;
-    int fdbe = STDERR_FILENO;
 
     while (1)
     {
-
-        if (STDIN_FILENO != fdb0)
-        {
-            if (dup2(fdb0, STDIN_FILENO) == -1)
-            {
-                perror("dup2 stdin restore");
-                return 1;
-            }
-        }
-        if (STDOUT_FILENO != fdb1)
-        {
-            if (dup2(fdb1, STDOUT_FILENO) == -1)
-            {
-                perror("dup2 stdout restore");
-                return 1;
-            }
-        }
-        if (STDERR_FILENO != fdbe)
-        {
-            if (dup2(fdbe, STDERR_FILENO) == -1)
-            {
-                perror("dup2 stderr restore");
-                return 1;
-            }
-        }
 
         // Affichage du prompt
 
         char *input = prompt(last_return_code);
         if (!input)
         {
-            close(fdb0);
-            close(fdb1);
-            close(fdbe);
             return last_return_code;
             // Quitter si l'utilisateur saisit Ctrl-D
         }
@@ -257,9 +226,6 @@ int main()
         free(input);
         free_args(args);
     }
-    close(fdb0);
-    close(fdb1);
-    close(fdbe);
 
     return 0;
 }

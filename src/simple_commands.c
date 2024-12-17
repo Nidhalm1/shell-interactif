@@ -3,8 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 #include "../include/execute.h"
-#include "../include/builtin.h" // Si les fonctions builtin_* sont déclarées ici
-#include "../include/command.h" // Si printerr est déclarée ici
+#include "../include/builtin.h" // Pour les fonctions builtin_*
+#include "../include/command.h" // Pour printerr
 
 /**
  * @brief Parse et exécute une commande simple
@@ -15,75 +15,63 @@
  */
 int parse_and_execute_simple(int argc, char **argv)
 {
+    if (argc == 0 || argv == NULL || argv[0] == NULL)
+    {
+        printerr("Erreur: commande vide\n");
+        return 1;
+    }
+
     // Commandes internes
     if (strcmp(argv[0], "pwd") == 0)
     {
-        if (!contientRedi(argv, argc)) // elle contient pas des redirections
+        if (argc > 2)
         {
-            if (argc > 2)
-            {
-                printerr("pwd: too many arguments\n");
-                return 1; // Code d'erreur
-            }
-            if (argc == 2)
-            {
-                if (strcmp(argv[1], "-p") != 0)
-                {
-                    printerr("pwd: ");
-                    printerr(argv[1]);
-                    printerr(": invalid␣argument\n");
-                    return 1;
-                }
-                return builtin_pwd(argv);
-            }
-            else
-            {
-                return builtin_pwd(argv);
-            }
+            printerr("pwd: too many arguments\n");
+            return 1;
         }
-        else
+        if (argc == 2 && strcmp(argv[1], "-p") != 0)
         {
-            return builtin_pwd(argv);
+            printerr("pwd: ");
+            printerr(argv[1]);
+            printerr(": invalid argument\n");
+            return 1;
         }
+        return builtin_pwd(argv);
     }
     else if (strcmp(argv[0], "cd") == 0)
     {
         if (argc > 2)
         {
             printerr("cd: too many arguments\n");
-            return 1; // Code d'erreur
+            return 1;
         }
-        else if (argc == 1)
-        {
-            return builtin_cd(NULL);
-        }
-        else
-        {
-            return builtin_cd(argv[1]);
-        }
+        const char *path = (argc == 1) ? NULL : argv[1];
+        return builtin_cd(path);
     }
     else if (strcmp(argv[0], "ftype") == 0)
     {
-        if (argc > 2)
+        if (argc != 2)
         {
-            printerr("ftype: too many arguments\n");
-            return 1; // Code d'erreur
+            printerr("ftype: incorrect number of arguments\n");
+            return 1;
         }
-        char *filename = argv[1];
-        if (!filename)
+        if (argv[1] == NULL || strlen(argv[1]) == 0)
         {
             printerr("ftype: no file specified\n");
-            return 1; // Code d'erreur
+            return 1;
         }
-        else
-        {
-            return builtin_ftype(filename);
-        }
+        return builtin_ftype(argv[1]);
     }
 
     // Commande externe
     else
     {
-        return execute_command(argv[0], STDIN_FILENO, STDOUT_FILENO, argv);
+        int ret = execute_command(argv[0], STDIN_FILENO, STDOUT_FILENO, argv);
+        if (ret == -1)
+        {
+            printerr("Erreur: échec de l'exécution de la commande externe\n");
+            return 1;
+        }
+        return ret;
     }
 }
