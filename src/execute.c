@@ -157,10 +157,10 @@ int execute_command(const char *command, int fd0, int fd1, char **argv)
         for (int i = 0; i < len; i++)
         {
             if ((fichierEntree != -1 && (i == fichierEntree || i == fichierEntree - 1)) ||
-            (fichierErr != -1 && (i == fichierErr || i == fichierErr - 1)) ||
-            (fichierSortie != -1 && (i == fichierSortie || i == fichierSortie - 1)))
+                (fichierErr != -1 && (i == fichierErr || i == fichierErr - 1)) ||
+                (fichierSortie != -1 && (i == fichierSortie || i == fichierSortie - 1)))
             {
-            continue;
+                continue;
             }
             new_argv[new_argc++] = argv[i];
         }
