@@ -159,7 +159,6 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
 
     cmd[index] = NULL; // Null-terminate the command array
     *cmd_size = size_of_cmd;
-    printf("La commande est %s", cmd);
     return cmd;
 }
 
