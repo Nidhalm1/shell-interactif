@@ -374,8 +374,6 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
     filtered_cmd[filtered_size] = NULL;
 
     // Afficher la commande après filtration pour le débogage
-    printf("Commande filtrée : ");
-    print_argv_line(filtered_cmd);
 
     // Exécuter la commande
     int ret = parse_and_execute(filtered_size, filtered_cmd);
