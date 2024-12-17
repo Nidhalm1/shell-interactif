@@ -1,11 +1,16 @@
 #ifndef BUILTIN_H
 #define BUILTIN_H
 
-int is_builtin_command(const char *command);
-int execute_builtin_command(const char *command);
-int builtin_pwd(char **argv);
+// Exécute la commande builtin 'pwd'
+int builtin_pwd();
+
+// Exécute la commande builtin 'cd'
 int builtin_cd(const char *path);
+
+// Exécute la commande builtin 'ftype'
 int builtin_ftype(const char *filename);
-void execute_commandd(const char *result, int fd0, int fd1, char **argv);
+
+// Exécute une commande interne avec redirections
+int redirections(int fd0, int fd1, char **argv, int argc);
 
 #endif // BUILTIN_H

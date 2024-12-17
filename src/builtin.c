@@ -13,7 +13,8 @@ int builtin_pwd(char **argv)
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL)
     {
-        execute_commandd(cwd, STDIN_FILENO, STDOUT_FILENO, argv);
+        printt(cwd);
+        printt("\n");
         return 0;
     }
     return 1;
@@ -88,7 +89,7 @@ int builtin_ftype(const char *filename)
 }
 
 /*pour les redirections dans les commandes internes*/
-void execute_commandd(const char *result, int fd0, int fd1, char **argv)
+int redirections(int fd0, int fd1, char **argv, int argc)
 {
     int fd2 = STDERR_FILENO; // pour les erreurs
                              // Processus enfant
@@ -149,15 +150,15 @@ void execute_commandd(const char *result, int fd0, int fd1, char **argv)
     {
         if (ecrase)
         {
-            fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+            fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_TRUNC, 0644);
         }
         else if (ajoute)
         {
-            fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_APPEND, 0777);
+            fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_APPEND, 0644);
         }
         else
         {
-            fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_EXCL, 0777);
+            fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_EXCL, 0644);
         }
         if (fd1 == -1)
         {
@@ -187,7 +188,6 @@ void execute_commandd(const char *result, int fd0, int fd1, char **argv)
             exit(1);
         }
     }
-
     // Rediriger les flux
     if (fd0 != STDIN_FILENO)
     {
@@ -216,9 +216,8 @@ void execute_commandd(const char *result, int fd0, int fd1, char **argv)
         }
         close(fd2);
     }
-    printt(result);
-    printt("\n");
-    // Exécuter la commande
+    int ret = parse_and_execute_simple(argc, argv);
+    // on remet les redirection de base
     if (STDIN_FILENO != fdb0)
     {
         if (dup2(fdb0, STDIN_FILENO) == -1)
@@ -246,4 +245,12 @@ void execute_commandd(const char *result, int fd0, int fd1, char **argv)
         }
         close(fdbe);
     }
+    // Fermer les fichiers de sortie pour s'assurer que les données sont écrites
+    if (fichierSortie != -1) {
+        close(fd1);
+    }
+    if (fichierErr != -1) {
+        close(fd2);
+    }
+    return ret;
 }

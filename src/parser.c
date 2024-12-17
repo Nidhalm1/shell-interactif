@@ -12,6 +12,7 @@
 #include "../include/piped_commands.h"
 #include "../include/if_function.h"
 #include "../include/structured_command.h"
+#include <stdbool.h>
 
 /**
  * @brief Parse et exécute une commande
@@ -66,5 +67,13 @@ int parse_and_execute(int argc, char **argv)
     }
 
     // Commande externe : appel à la fonction pour exécuter la commande simple
-    return parse_and_execute_simple(argc, argv);
+    // si elle contient des redirections
+    if (contientRedi(argv, argc) && (strcmp(argv[0], "pwd") == 0 || strcmp(argv[0], "ftype") == 0))
+    {
+        return redirections(STDIN_FILENO, STDOUT_FILENO, argv, argc);
+    }
+    else
+    {
+        return parse_and_execute_simple(argc, argv);
+    }
 }

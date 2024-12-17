@@ -40,24 +40,3 @@ int printerr(char *input)
     return 0;
 }
 
-/**
- * @brief verifie si la commande contient une redirection
- *
- * @param input Chaîne de caractères
- * @return int 1 si la commande contient une redirection, 0 sinon
- */
-
-int is_redirection(char *input)
-{
-    int i = 0;
-    int len = strlen(input);
-    while (i < len)
-    {
-        if (input[i] == '>' || input[i] == '<')
-        {
-            return 1;
-        }
-        i++;
-    }
-    return 0;
-}

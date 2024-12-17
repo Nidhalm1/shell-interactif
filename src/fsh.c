@@ -137,6 +137,13 @@ int exitt(char **argv, int argc, int lastReturncode)
         }
         else if (argv[1] != NULL)
         {
+            // Vérifier si argv[1] est un entier
+            for (size_t i = 0; i < strlen(argv[1]); i++) {
+                if (!isdigit(argv[1][i])) {
+                    free_args(argv);
+                    return lastReturncode;
+                }
+            }
             int exit_code = atoi(argv[1]);
             free_args(argv);
             return exit_code; // Quitte le shell avec le code passé en argument
@@ -151,6 +158,13 @@ int exitt(char **argv, int argc, int lastReturncode)
         }
         else if (argv[1] != NULL)
         {
+            // Vérifier si argv[1] est un entier
+            for (size_t i = 0; i < strlen(argv[1]); i++) {
+                if (!isdigit(argv[1][i])) {
+                    free_args(argv);
+                    return lastReturncode;
+                }
+            }
             int exit_code = atoi(argv[1]);
             free_args(argv);
             return exit_code; // Quitte le shell avec le code passé en argument

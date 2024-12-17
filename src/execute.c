@@ -77,8 +77,6 @@ int execute_command(const char *command, int fd0, int fd1, char **argv)
                 perror("Erreur d'ouverture de fichier d'entrée");
                 exit(1);
             }
-            supprimeS(argv, argv[fichierEntree]);
-            supprimeS(argv, argv[fichierEntree - 1]);
         }
 
         // Gestion de la sortie
@@ -86,23 +84,21 @@ int execute_command(const char *command, int fd0, int fd1, char **argv)
         {
             if (ecrase)
             {
-                fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+                fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_TRUNC, 0644);
             }
             else if (ajoute)
             {
-                fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_APPEND, 0777);
+                fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_APPEND, 0644);
             }
             else
             {
-                fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_EXCL, 0777);
+                fd1 = open(argv[fichierSortie], O_WRONLY | O_CREAT | O_EXCL, 0644);
             }
             if (fd1 == -1)
             {
                 perror("Erreur d'ouverture de fichier de sortie");
                 exit(1);
             }
-            supprimeS(argv, argv[fichierSortie]);
-            supprimeS(argv, argv[fichierSortie - 1]);
         }
 
         // Gestion de la redirection d'erreur
@@ -118,15 +114,13 @@ int execute_command(const char *command, int fd0, int fd1, char **argv)
             }
             else
             {
-                fd2 = open(argv[fichierErr], O_WRONLY | O_CREAT | O_EXCL, 0777);
+                fd2 = open(argv[fichierErr], O_WRONLY | O_CREAT | O_EXCL, 0644);
             }
             if (fd2 == -1)
             {
                 perror("Erreur d'ouverture du fichier d'erreur");
                 exit(1);
             }
-            supprimeS(argv, argv[fichierErr]);
-            supprimeS(argv, argv[fichierErr - 1]);
         }
 
         // Rediriger les flux
@@ -157,10 +151,25 @@ int execute_command(const char *command, int fd0, int fd1, char **argv)
             }
             close(fd2);
         }
+        // Créer une copie du tableau argv sans les redirections
+        int new_argc = 0;
+        char **new_argv = malloc((len + 1) * sizeof(char *));
+        for (int i = 0; i < len; i++)
+        {
+            if ((fichierEntree != -1 && (i == fichierEntree || i == fichierEntree - 1)) ||
+            (fichierErr != -1 && (i == fichierErr || i == fichierErr - 1)) ||
+            (fichierSortie != -1 && (i == fichierSortie || i == fichierSortie - 1)))
+            {
+            continue;
+            }
+            new_argv[new_argc++] = argv[i];
+        }
+        new_argv[new_argc] = NULL;
 
         // Exécuter la commande
-        execvp(command, argv);
+        execvp(command, new_argv);
         perror(command); // Affiche une erreur si execvp échoue
+        free_args(new_argv);
         exit(1);
     }
     else if (pid < 0)
@@ -187,20 +196,6 @@ int execute_command(const char *command, int fd0, int fd1, char **argv)
     }
 }
 
-void supprimeS(char **s, char *ss)
-{
-    int len = lenn(s);
-    for (int i = 0; i < len; i++)
-    {
-        if (strcmp(s[i], ss) == 0)
-        {
-            free(s[i]);
-            memmove(s + i, s + i + 1, len - i - 1);
-            s[len - 1] = NULL;
-            break;
-        }
-    }
-}
 int lenn(char **s)
 {
     int lenn = 0;

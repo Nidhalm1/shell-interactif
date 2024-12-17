@@ -18,7 +18,7 @@ int parse_and_execute_simple(int argc, char **argv)
     // Commandes internes
     if (strcmp(argv[0], "pwd") == 0)
     {
-        if (!contientRedi(argv, argc))//elle contient pas des redirections
+        if (!contientRedi(argv, argc)) // elle contient pas des redirections
         {
             if (argc > 2)
             {
@@ -36,9 +36,14 @@ int parse_and_execute_simple(int argc, char **argv)
                 }
                 return builtin_pwd(argv);
             }
+            else
+            {
+                return builtin_pwd(argv);
+            }
         }
-        else{
-
+        else
+        {
+            return builtin_pwd(argv);
         }
     }
     else if (strcmp(argv[0], "cd") == 0)
@@ -77,6 +82,8 @@ int parse_and_execute_simple(int argc, char **argv)
     }
 
     // Commande externe
-
-    return execute_command(argv[0], STDIN_FILENO, STDOUT_FILENO, argv);
+    else
+    {
+        return execute_command(argv[0], STDIN_FILENO, STDOUT_FILENO, argv);
+    }
 }
