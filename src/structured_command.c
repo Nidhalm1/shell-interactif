@@ -28,6 +28,14 @@ int parse_and_execute_structured(int argc, char **argv)
             // Exécuter la commande entre start et i-1
             if (i > start)
             {
+
+                printf("Commande à exécuter : ");
+                for (int j = start; j < i; j++)
+                {
+                    printf("%s ", argv[j]);
+                }
+                printf("\n");
+
                 int ret = parse_and_execute(i - start, argv + start);
                 if (ret != 0)
                 {
