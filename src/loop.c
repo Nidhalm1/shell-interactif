@@ -89,65 +89,75 @@ loop_options *option_struc(int argc, char *argv[])
 char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
 {
     size_t size_of_cmd = 0;
-    bool find = false;
+    bool in_block = false;
     int count = 0;
 
-    for (size_t i = 0; i < size_of_tab; i++) {
-        if (strcmp(argv[i], "{") == 0) {
+    for (size_t i = 0; i < size_of_tab; i++)
+    {
+        if (strcmp(argv[i], "{") == 0)
+        {
             count++;
-            if (count == 1) {
-                find = true;
-                continue;
+            if (count == 1)
+            {
+                in_block = true;
+                continue; // Ignore the opening brace
             }
         }
-
-        if (strcmp(argv[i], "}") == 0) {
+        if (strcmp(argv[i], "}") == 0)
+        {
             count--;
-            if (count == 0) {
-                break;
+            if (count == 0)
+            {
+                break; // End of the block
             }
         }
-
-        if (find && count > 0) {
+        if (in_block && count > 0)
+        {
             size_of_cmd++;
         }
     }
 
-    if (size_of_cmd == 0 || count != 0) {
-        return NULL;
+    if (size_of_cmd == 0 || count != 0)
+    {
+        return NULL; // Invalid or unmatched braces
     }
 
     char **cmd = malloc((size_of_cmd + 1) * sizeof(char *));
-    if (cmd == NULL) {
-        printerr("Erreur d'allocation mémoire pour cmd");
+    if (cmd == NULL)
+    {
+        perror("Erreur d'allocation mémoire pour cmd");
         exit(EXIT_FAILURE);
     }
 
-    size_t parc = 0;
-    find = false;
+    size_t index = 0;
+    in_block = false;
     count = 0;
-    for (size_t i = 0; i < size_of_tab; i++) {
-        if (strcmp(argv[i], "{") == 0) {
+    for (size_t i = 0; i < size_of_tab; i++)
+    {
+        if (strcmp(argv[i], "{") == 0)
+        {
             count++;
-            if (count == 1) {
-                find = true;
+            if (count == 1)
+            {
+                in_block = true;
                 continue;
             }
         }
-
-        if (strcmp(argv[i], "}") == 0) {
+        if (strcmp(argv[i], "}") == 0)
+        {
             count--;
-            if (count == 0) {
+            if (count == 0)
+            {
                 break;
             }
         }
-
-        if (find && count > 0) {
-            cmd[parc++] = argv[i];
+        if (in_block && count > 0)
+        {
+            cmd[index++] = argv[i];
         }
     }
 
-    cmd[parc] = NULL;
+    cmd[index] = NULL; // Null-terminate the command array
     *cmd_size = size_of_cmd;
     return cmd;
 }
@@ -183,7 +193,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 
     cmd = get_cmd(argv, size_of_tab, &cmd_size);
 
-    int nb_process_runned  = 0;
+    int nb_process_runned = 0;
     while ((entry = readdir(dirp)) != NULL)
     {
         if (!options->opt_A && entry->d_name[0] == '.')
@@ -235,7 +245,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
         if (options->max > 0 && nb_process_runned >= options->max)
         {
             wait(NULL);
-            nb_process_runned --;
+            nb_process_runned--;
         }
 
         pid_t p = fork();
@@ -324,10 +334,13 @@ void replace_variables(char *argv[], size_t size_of_tab, char *replace_var, char
  *
  * @param argv Tableau d'arguments
  */
-void print_argv_line(char *argv[]) {
-    for (size_t i = 0; argv[i] != NULL; i++) {
+void print_argv_line(char *argv[])
+{
+    for (size_t i = 0; argv[i] != NULL; i++)
+    {
         printf("%s", argv[i]);
-        if (argv[i + 1] != NULL) {
+        if (argv[i + 1] != NULL)
+        {
             printf(" ");
         }
     }
@@ -343,7 +356,7 @@ void print_argv_line(char *argv[]) {
  * @param loop_var Nom de la variable à remplacer
  * @return int Code de retour de la commande
  */
-int ex_cmd(char *argv[],size_t size_of_tab, char *replace_var, char *loop_var)
+int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 {
     replace_variables(argv, size_of_tab, replace_var, loop_var);
     return parse_and_execute(size_of_tab, argv);
@@ -355,16 +368,19 @@ int ex_cmd(char *argv[],size_t size_of_tab, char *replace_var, char *loop_var)
  * @param val Nom du fichier
  * @return char* Extension du fichier ou NULL si aucune extension
  */
-char *get_ext(const char *val) {
+char *get_ext(const char *val)
+{
     char *cpy = strdup(val);
-    if (cpy == NULL) {
+    if (cpy == NULL)
+    {
         return NULL;
     }
 
     char *token = strtok(cpy, ".");
     char *save = NULL;
 
-    while (token != NULL) {
+    while (token != NULL)
+    {
         save = token;
         token = strtok(NULL, ".");
     }
@@ -380,17 +396,21 @@ char *get_ext(const char *val) {
  * @param file Nom du fichier
  * @return char* Nom du fichier sans extension
  */
-char *remove_ext(const char *file) {
-    if (file == NULL) {
+char *remove_ext(const char *file)
+{
+    if (file == NULL)
+    {
         return NULL;
     }
     const char *last_dot = strrchr(file, '.');
-    if (last_dot == NULL || last_dot == file) {
+    if (last_dot == NULL || last_dot == file)
+    {
         return strdup(file);
     }
     size_t new_file_length = last_dot - file;
     char *new_file = malloc(new_file_length + 1);
-    if (new_file == NULL) {
+    if (new_file == NULL)
+    {
         return NULL;
     }
     strncpy(new_file, file, new_file_length);
