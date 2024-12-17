@@ -114,19 +114,19 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
     {
         if (strcmp(argv[i], "{") == 0)
         {
-            brace_count++;
-            if (!in_block)
+            if (brace_count == 0) // Début du bloc principal
             {
-                start_index = i + 1; // Début du bloc
+                start_index = i + 1;
                 in_block = true;
             }
+            brace_count++;
         }
         else if (strcmp(argv[i], "}") == 0)
         {
             brace_count--;
-            if (brace_count == 0) // Fin du bloc apparié
+            if (brace_count == 0) // Fin du bloc principal
             {
-                size_of_cmd = i - start_index; // Taille du bloc
+                size_of_cmd = i - start_index;
                 break;
             }
         }
@@ -146,14 +146,15 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
         return NULL;
     }
 
-    // Copie des arguments entre les accolades
-    for (size_t i = 0; i < size_of_cmd; i++)
+    // Copie des arguments entre les accolades, sans supprimer les accolades internes
+    size_t j = 0;
+    for (size_t i = start_index; i < start_index + size_of_cmd; i++)
     {
-        cmd[i] = strdup(argv[start_index + i]);
+        cmd[j++] = strdup(argv[i]);
     }
-    cmd[size_of_cmd] = NULL; // Terminaison du tableau
+    cmd[j] = NULL; // Terminaison du tableau
+    *cmd_size = j;
 
-    *cmd_size = size_of_cmd;
     return cmd;
 }
 /**
