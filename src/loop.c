@@ -91,16 +91,17 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
     size_t size_of_cmd = 0;
     bool in_block = false;
     int count = 0;
+    size_t start_index = 0;
 
     for (size_t i = 0; i < size_of_tab; i++)
     {
         if (strcmp(argv[i], "{") == 0)
         {
             count++;
-            if (count == 1)
+            if (!in_block)
             {
+                start_index = i + 1; // Début du bloc
                 in_block = true;
-                continue; // Ignore the opening brace
             }
         }
         if (strcmp(argv[i], "}") == 0)
@@ -108,56 +109,23 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
             count--;
             if (count == 0)
             {
-                break; // End of the block
-            }
-        }
-        if (in_block && count > 0)
-        {
-            size_of_cmd++;
-        }
-    }
-
-    if (size_of_cmd == 0 || count != 0)
-    {
-        return NULL; // Invalid or unmatched braces
-    }
-
-    char **cmd = malloc((size_of_cmd + 1) * sizeof(char *));
-    if (cmd == NULL)
-    {
-        perror("Erreur d'allocation mémoire pour cmd");
-        exit(EXIT_FAILURE);
-    }
-
-    size_t index = 0;
-    in_block = false;
-    count = 0;
-    for (size_t i = 0; i < size_of_tab; i++)
-    {
-        if (strcmp(argv[i], "{") == 0)
-        {
-            count++;
-            if (count == 1)
-            {
-                in_block = true;
-                continue;
-            }
-        }
-        if (strcmp(argv[i], "}") == 0)
-        {
-            count--;
-            if (count == 0)
-            {
+                size_of_cmd = i - start_index;
                 break;
             }
         }
-        if (in_block && count > 0)
-        {
-            cmd[index++] = argv[i];
-        }
     }
 
-    cmd[index] = NULL; // Null-terminate the command array
+    if (count != 0 || size_of_cmd == 0)
+    {
+        return NULL; // Accolades non appariées
+    }
+
+    char **cmd = malloc((size_of_cmd + 1) * sizeof(char *));
+    for (size_t i = 0; i < size_of_cmd; i++)
+    {
+        cmd[i] = argv[start_index + i];
+    }
+    cmd[size_of_cmd] = NULL; // Terminateur
     *cmd_size = size_of_cmd;
     return cmd;
 }
@@ -360,6 +328,7 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 
 {
     replace_variables(argv, size_of_tab, replace_var, loop_var);
+    print_argv_line(argv);
     return parse_and_execute(size_of_tab, argv);
 }
 
