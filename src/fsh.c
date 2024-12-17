@@ -7,6 +7,7 @@
 #include "../include/execute.h"
 #include "../include/prompt.h"
 #include "../include/command.h"
+#include <ctype.h>
 #include <stdbool.h>
 
 void sigint_handler(int sig)
@@ -93,33 +94,8 @@ char **argv(char *input)
     return args;
 }
 
-/**
- * @brief Libère la mémoire allouée pour les arguments
- *
- * @param args Tableau d'arguments
- */
-void free_args(char **args)
-{
-    if (args)
-    {
-        for (int i = 0; args[i] != NULL; i++)
-        {
-            free(args[i]);
-        }
-        free(args);
-    }
-}
-bool contientRedi(char **s, int len)
-{
-    for (size_t i = 0; i < len; i++)
-    {
-        if (strcmp(s[i], ">") == 0 || strcmp(s[i], "<") == 0 || strcmp(s[i], ">>") == 0 || strcmp(s[i], "2>") == 0 || strcmp(s[i], "2>>") == 0 || strcmp(s[i], ">|") == 0)
-        {
-            return true;
-        }
-    }
-    return false;
-}
+
+
 int exitt(char **argv, int argc, int lastReturncode)
 {
     if (!contientRedi(argv, argc))

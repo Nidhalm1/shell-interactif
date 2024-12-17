@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include "../include/execute.h"
 #include "../include/builtin.h" // Si les fonctions builtin_* sont déclarées ici
-#include "../include/command.h" // Si printerr est déclarée ici
+#include "../include/command.h"
+#include "../include/simple_commands.h"
+#include "../include/parser.h" // Si printerr est déclarée ici
 
 /**
  * @brief Parse et exécute une commande simple

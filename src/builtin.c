@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include "../include/execute.h"
 #include "../include/command.h"
+#include "../include/simple_commands.h"
 #include <errno.h>
 
 int builtin_pwd(char **argv)
