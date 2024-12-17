@@ -122,13 +122,14 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
         return NULL; // Accolades non appariées
     }
 
-    // Allocation et copie des commandes
+    // Allocation et copie des commandes sans les accolades
     char **cmd = malloc((size_of_cmd + 1) * sizeof(char *));
     for (size_t i = 0; i < size_of_cmd; i++)
     {
         cmd[i] = argv[start_index + i];
     }
     cmd[size_of_cmd] = NULL; // Terminateur de la commande
+
     *cmd_size = size_of_cmd;
     return cmd;
 }
@@ -330,8 +331,6 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 
 {
     replace_variables(argv, size_of_tab, replace_var, loop_var);
-
-    
 
     return parse_and_execute(size_of_tab, argv);
 }
