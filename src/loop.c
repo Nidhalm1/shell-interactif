@@ -357,29 +357,11 @@ void print_argv_line(char *argv[])
  * @return int Code de retour de la commande
  */
 int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
+
 {
-    // Remplacement des variables dans la commande
     replace_variables(argv, size_of_tab, replace_var, loop_var);
-
-    // Filtrer les accolades
-    char **filtered_cmd = malloc(size_of_tab * sizeof(char *));
-    size_t filtered_size = 0;
-    for (size_t i = 0; i < size_of_tab; i++)
-    {
-        if (strcmp(argv[i], "{") != 0 && strcmp(argv[i], "}") != 0)
-        {
-            filtered_cmd[filtered_size++] = argv[i];
-        }
-    }
-    filtered_cmd[filtered_size] = NULL;
-
-    // Afficher la commande après filtration pour le débogage
-
-    // Exécuter la commande
-    int ret = parse_and_execute(filtered_size, filtered_cmd);
-
-    free(filtered_cmd);
-    return ret;
+    print_argv_line(argv);
+    return parse_and_execute(size_of_tab, argv);
 }
 
 /**
