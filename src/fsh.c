@@ -138,8 +138,10 @@ int exitt(char **argv, int argc, int lastReturncode)
         else if (argv[1] != NULL)
         {
             // Vérifier si argv[1] est un entier
-            for (size_t i = 0; i < strlen(argv[1]); i++) {
-                if (!isdigit(argv[1][i])) {
+            for (size_t i = 0; i < strlen(argv[1]); i++)
+            {
+                if (!isdigit(argv[1][i]))
+                {
                     free_args(argv);
                     return lastReturncode;
                 }
@@ -159,8 +161,10 @@ int exitt(char **argv, int argc, int lastReturncode)
         else if (argv[1] != NULL)
         {
             // Vérifier si argv[1] est un entier
-            for (size_t i = 0; i < strlen(argv[1]); i++) {
-                if (!isdigit(argv[1][i])) {
+            for (size_t i = 0; i < strlen(argv[1]); i++)
+            {
+                if (!isdigit(argv[1][i]))
+                {
                     free_args(argv);
                     return lastReturncode;
                 }
@@ -187,6 +191,7 @@ int main()
     while (1)
     {
         // Affichage du prompt
+        write(STDOUT_FILENO, "Teste", 5);
         char *input = prompt(last_return_code);
         if (!input)
         {
