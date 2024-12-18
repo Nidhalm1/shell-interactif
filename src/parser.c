@@ -12,6 +12,7 @@
 #include "../include/piped_commands.h"
 #include "../include/if_function.h"
 #include "../include/structured_command.h"
+#include "../include/parser.h"
 #include <stdbool.h>
 
 /**
@@ -75,5 +76,29 @@ int parse_and_execute(int argc, char **argv)
     else
     {
         return parse_and_execute_simple(argc, argv);
+    }
+}
+
+bool contientRedi(char **s, int len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        if (strcmp(s[i], ">") == 0 || strcmp(s[i], "<") == 0 || strcmp(s[i], ">>") == 0 || strcmp(s[i], "2>") == 0 || strcmp(s[i], "2>>") == 0 || strcmp(s[i], ">|") == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void free_args(char **args)
+{
+    if (args)
+    {
+        for (int i = 0; args[i] != NULL; i++)
+        {
+            free(args[i]);
+        }
+        free(args);
     }
 }

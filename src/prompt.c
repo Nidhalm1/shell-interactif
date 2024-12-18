@@ -65,7 +65,7 @@ char *prompt(int last_return_code)
     get_current_directory(dir, sizeof(dir));
     int len = longueur_int(last_return_code);
     int longeur = strlen(dir);
-    if (longeur >25)
+    if (longeur > 25)
     {
         troncate(dir, 25 - len + 1);
     }

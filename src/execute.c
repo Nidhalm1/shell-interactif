@@ -11,6 +11,7 @@
 #include "../include/execute.h"
 #include <errno.h>
 #include "../include/command.h"
+#include "../include/parser.h"
 #include <fcntl.h>
 
 /**

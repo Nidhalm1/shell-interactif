@@ -7,6 +7,7 @@
 #include "../include/execute.h"
 #include "../include/prompt.h"
 #include "../include/command.h"
+#include <ctype.h>
 #include <stdbool.h>
 
 void sigint_handler(int sig)
@@ -93,33 +94,8 @@ char **argv(char *input)
     return args;
 }
 
-/**
- * @brief Libère la mémoire allouée pour les arguments
- *
- * @param args Tableau d'arguments
- */
-void free_args(char **args)
-{
-    if (args)
-    {
-        for (int i = 0; args[i] != NULL; i++)
-        {
-            free(args[i]);
-        }
-        free(args);
-    }
-}
-bool contientRedi(char **s, int len)
-{
-    for (size_t i = 0; i < len; i++)
-    {
-        if (strcmp(s[i], ">") == 0 || strcmp(s[i], "<") == 0 || strcmp(s[i], ">>") == 0 || strcmp(s[i], "2>") == 0 || strcmp(s[i], "2>>") == 0 || strcmp(s[i], ">|") == 0)
-        {
-            return true;
-        }
-    }
-    return false;
-}
+
+
 int exitt(char **argv, int argc, int lastReturncode)
 {
     if (!contientRedi(argv, argc))
@@ -138,8 +114,10 @@ int exitt(char **argv, int argc, int lastReturncode)
         else if (argv[1] != NULL)
         {
             // Vérifier si argv[1] est un entier
-            for (size_t i = 0; i < strlen(argv[1]); i++) {
-                if (!isdigit(argv[1][i])) {
+            for (size_t i = 0; i < strlen(argv[1]); i++)
+            {
+                if (!isdigit(argv[1][i]))
+                {
                     free_args(argv);
                     return lastReturncode;
                 }
@@ -159,8 +137,10 @@ int exitt(char **argv, int argc, int lastReturncode)
         else if (argv[1] != NULL)
         {
             // Vérifier si argv[1] est un entier
-            for (size_t i = 0; i < strlen(argv[1]); i++) {
-                if (!isdigit(argv[1][i])) {
+            for (size_t i = 0; i < strlen(argv[1]); i++)
+            {
+                if (!isdigit(argv[1][i]))
+                {
                     free_args(argv);
                     return lastReturncode;
                 }
@@ -186,11 +166,14 @@ int main()
 
     while (1)
     {
+
         // Affichage du prompt
+
         char *input = prompt(last_return_code);
         if (!input)
         {
-            return last_return_code; // Quitter si l'utilisateur saisit Ctrl-D
+            return last_return_code;
+            // Quitter si l'utilisateur saisit Ctrl-D
         }
 
         args = argv(input);
