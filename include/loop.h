@@ -24,7 +24,8 @@ typedef struct
     int max;
 } loop_options;
 
-int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var,char *);
+int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *);
+int add_reference(char ***refs, size_t *size, size_t *capacity, const char *new_ref);
 char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size);
 char *get_ext(const char *val);
 char *remove_ext(const char *file);

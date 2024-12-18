@@ -36,6 +36,32 @@ loop_options *init_struc()
     return opt_struc;
 }
 
+int add_reference(char ***refs, size_t *size, size_t *capacity, const char *new_ref)
+{
+    // Agrandir le tableau si nécessaire
+    if (*size >= *capacity)
+    {
+        *capacity *= 2;
+        char **temp = realloc(*refs, *capacity * sizeof(char *));
+        if (temp == NULL)
+        {
+            perror("Erreur lors de l'agrandissement du tableau");
+            return -1;
+        }
+        *refs = temp;
+    }
+
+    // Ajouter la nouvelle référence
+    (*refs)[*size] = strdup(new_ref);
+    if ((*refs)[*size] == NULL)
+    {
+        perror("Erreur lors de l'ajout d'une référence");
+        return -1;
+    }
+    (*size)++;
+    return 0;
+}
+
 /**
  * @brief Analyse les options de ligne de commande et remplit une structure loop_options
  *
@@ -185,105 +211,156 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 {
     if (options == NULL)
     {
-        printerr("Option non reconnue.\n");
+        fprintf(stderr, "Option non reconnue.\n");
         return 1;
     }
 
+    // Initialiser le tableau dynamique des références
+    size_t refs_size = 0;
+    size_t refs_capacity = 10;
+    char **references = malloc(refs_capacity * sizeof(char *));
+    if (references == NULL)
+    {
+        perror("Erreur d'allocation mémoire pour les références");
+        return 1;
+    }
+
+    // Collecter toutes les références dans le répertoire
     DIR *dirp = opendir(path);
     if (dirp == NULL)
     {
-        printerr("Erreur d'ouverture du répertoire\n");
+        fprintf(stderr, "Erreur d'ouverture du répertoire : %s\n", path);
+        free(references);
         return 1;
     }
 
     struct dirent *entry;
     struct stat st;
-    char **cmd = NULL;
-    size_t cmd_size = 0;
 
-    cmd = get_cmd(argv, size_of_tab, &cmd_size);
-
-    int nb_process_runned = 0;
     while ((entry = readdir(dirp)) != NULL)
     {
+        // Ignorer les fichiers cachés si l'option `-A` n'est pas activée
         if (!options->opt_A && entry->d_name[0] == '.')
         {
             continue;
         }
 
+        // Ignorer les entrées "." et ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         {
             continue;
         }
 
+        // Construire le chemin complet de l'entrée
         char path_file[MAX_LENGTH];
         snprintf(path_file, sizeof(path_file), "%s/%s", path, entry->d_name);
 
+        // Obtenir les informations sur l'entrée
         if (lstat(path_file, &st) == -1)
         {
             perror("Erreur avec lstat");
             continue;
         }
 
+        // Récursion dans les sous-répertoires si l'option `-r` est activée
         if (options->opt_r && S_ISDIR(st.st_mode))
         {
-            loop_function(path_file, argv, size_of_tab, options);
+            if (loop_function(path_file, argv, size_of_tab, options) != 0)
+            {
+                fprintf(stderr, "Erreur lors du traitement du répertoire : %s\n", path_file);
+            }
         }
 
+        // Filtrer par type si `-t` est défini
+        if (options->type != NULL)
+        {
+            if ((strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) || // Fichiers ordinaires
+                (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) || // Répertoires
+                (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) || // Liens symboliques
+                (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)))  // Pipes nommés
+            {
+                continue; // Ignorer les entrées ne correspondant pas au type
+            }
+        }
+
+        // Filtrer par extension si `-e` est défini
         if (options->ext != NULL)
         {
             char *ext = get_ext(entry->d_name);
             if (ext == NULL || strcmp(ext, options->ext) != 0)
             {
                 free(ext);
-                continue;
+                continue; // Ignorer si l'extension ne correspond pas
             }
             free(ext);
         }
 
-        if (options->type != NULL)
+        // Ajouter l'entrée au tableau des références
+        if (add_reference(&references, &refs_size, &refs_capacity, path_file) != 0)
         {
-            if ((strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) ||
-                (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) ||
-                (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) ||
-                (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)))
-            {
-                continue;
-            }
+            closedir(dirp);
+            free(references);
+            return 1;
         }
+    }
 
+    closedir(dirp);
+
+    // Obtenir la commande à exécuter
+    size_t cmd_size = 0;
+    char **cmd = get_cmd(argv, size_of_tab, &cmd_size);
+    if (cmd == NULL)
+    {
+        fprintf(stderr, "Erreur lors de l'extraction de la commande.\n");
+        free(references);
+        return 1;
+    }
+
+    // Exécuter la commande sur chaque référence collectée
+    int nb_process_runned = 0; // Compteur de processus en cours
+    for (size_t i = 0; i < refs_size; i++)
+    {
+        // Gestion du nombre maximum de processus simultanés (`-p`)
         if (options->max > 0 && nb_process_runned >= options->max)
         {
-            wait(NULL);
+            wait(NULL); // Attendre qu'un processus se termine
             nb_process_runned--;
         }
 
+        // Créer un processus pour exécuter la commande sur l'entrée
         pid_t p = fork();
 
         switch (p)
         {
-        case -1:
+        case -1: // Erreur lors du fork
             perror("Erreur lors du fork");
             break;
 
-        case 0:
-            ex_cmd(cmd, cmd_size, path_file, argv[1]);
+        case 0:                                                       // Processus enfant
+            replace_variables(cmd, cmd_size, references[i], argv[1]); // Remplacement des variables
+            ex_cmd(cmd, cmd_size, references[i], argv[1]);            // Exécution de la commande
             exit(EXIT_SUCCESS);
 
-        default:
+        default: // Processus parent
             nb_process_runned++;
             break;
         }
-
-        while (nb_process_runned > 0)
-        {
-            wait(NULL);
-            nb_process_runned--;
-        }
     }
 
+    // Attendre la fin de tous les processus enfants
+    while (nb_process_runned > 0)
+    {
+        wait(NULL);
+        nb_process_runned--;
+    }
+
+    // Nettoyage
+    for (size_t i = 0; i < refs_size; i++)
+    {
+        free(references[i]);
+    }
+    free(references);
     free(cmd);
-    closedir(dirp);
     return 0;
 }
 
