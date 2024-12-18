@@ -371,7 +371,7 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 {
     replace_variables(argv, size_of_tab, replace_var, loop_var);
 
-    // print_argv_line(argv);
+    //print_argv_line(argv);
 
     return parse_and_execute(size_of_tab, argv);
 }

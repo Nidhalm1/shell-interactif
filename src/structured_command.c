@@ -30,18 +30,18 @@ int parse_and_execute_structured(int argc, char **argv)
 
             if (i > start) // S'il y a une commande à exécuter
             {
-                /* printf("Exécution de la commande: ");
-                 for (int j = start; j < i; j++)
-                 {
-                     printf("%s ", argv[j]);
-                 }
-                 printf("\n");*/
+                /*printf("Exécution de la commande: ");
+                for (int j = start; j < i; j++)
+                {
+                    printf("%s ", argv[j]);
+                }
+                printf("\n");*/
 
                 // Vérifier si c'est une commande `for`
                 if (strcmp(argv[start], "for") == 0)
                 {
                     // Traiter une commande `for` comme une entité structurée
-                    int ret = handle_for_command(i - start, argv + start);
+                    int ret = parse_and_execute(i - start, argv + start);
                     if (ret != 0)
                     {
                         status = ret; // Mise à jour du statut si erreur
@@ -85,57 +85,4 @@ int parse_and_execute_structured(int argc, char **argv)
     }
 
     return status; // Retourner le statut de la dernière commande
-}
-
-/**
- * @brief Traite une commande "for" et ses éventuels blocs imbriqués.
- *
- * @param argc Nombre d'arguments
- * @param argv Tableau d'arguments
- * @return int Code de retour
- */
-int handle_for_command(int argc, char **argv)
-{
-    // Vérifier la syntaxe minimale de la commande `for`
-    if (argc < 5 || strcmp(argv[2], "in") != 0 || strcmp(argv[argc - 1], "}") != 0)
-    {
-        fprintf(stderr, "Erreur : syntaxe invalide pour la boucle 'for'.\n");
-        return 1;
-    }
-
-    // Identifier le bloc `{ ... }` à partir de l'accolade ouvrante `{`
-    int block_start = -1;
-    for (int i = 3; i < argc; i++)
-    {
-        if (strcmp(argv[i], "{") == 0)
-        {
-            block_start = i + 1;
-            break;
-        }
-    }
-
-    if (block_start == -1 || block_start >= argc - 1)
-    {
-        fprintf(stderr, "Erreur : bloc de commande manquant ou mal formé dans 'for'.\n");
-        return 1;
-    }
-
-    // Exécuter la boucle pour chaque élément après `in`
-    for (int i = 3; i < block_start - 1; i++)
-    {
-        char *variable = argv[1]; // Nom de la variable (par exemple, `f`)
-        char *value = argv[i];    // Valeur actuelle de la boucle (par exemple, un fichier ou un chemin)
-
-        // Remplacer la variable dans le bloc de commandes par sa valeur
-        replace_variables(argv + block_start, argc - block_start - 1, value, variable);
-
-        // Exécuter récursivement le bloc de commandes
-        int ret = parse_and_execute_structured(argc - block_start - 1, argv + block_start);
-        if (ret != 0)
-        {
-            return ret; // Retourner une erreur si une itération échoue
-        }
-    }
-
-    return 0; // Succès
 }
