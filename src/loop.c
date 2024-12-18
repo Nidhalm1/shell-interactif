@@ -185,14 +185,14 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 {
     if (options == NULL)
     {
-        fprintf(stderr, "Option non reconnue.\n");
+        printerr("Option non reconnue.\n");
         return 1;
     }
 
     DIR *dirp = opendir(path);
     if (dirp == NULL)
     {
-        perror("Erreur d'ouverture du répertoire");
+        printerr("Erreur d'ouverture du répertoire\n");
         return 1;
     }
 
@@ -201,27 +201,16 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     char **cmd = NULL;
     size_t cmd_size = 0;
 
-    // Récupération de la commande dans les accolades
     cmd = get_cmd(argv, size_of_tab, &cmd_size);
-    if (cmd == NULL)
-    {
-        fprintf(stderr, "Erreur dans l'extraction de la commande.\n");
-        closedir(dirp);
-        return 1;
-    }
 
     int nb_process_runned = 0;
-    int max_return_value = 0;
-
     while ((entry = readdir(dirp)) != NULL)
     {
-        // Ignorer les fichiers cachés si -A n'est pas activé
         if (!options->opt_A && entry->d_name[0] == '.')
         {
             continue;
         }
 
-        // Ignorer "." et ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         {
             continue;
@@ -236,30 +225,11 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             continue;
         }
 
-        // Filtrage par type (-t TYPE)
-        if (options->type != NULL)
-        {
-            if ((strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) ||
-                (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) ||
-                (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) ||
-                (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)))
-            {
-                continue;
-            }
-        }
-
-        // Si c'est un répertoire et -r est activé, appel récursif
         if (options->opt_r && S_ISDIR(st.st_mode))
         {
-            int ret = loop_function(path_file, argv, size_of_tab, options);
-            if (ret > max_return_value)
-            {
-                max_return_value = ret;
-            }
-            continue; // Ne pas exécuter la commande sur le répertoire lui-même
+            loop_function(path_file, argv, size_of_tab, options);
         }
 
-        // Filtrage par extension (-e EXT)
         if (options->ext != NULL)
         {
             char *ext = get_ext(entry->d_name);
@@ -271,7 +241,17 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             free(ext);
         }
 
-        // Limitation du parallélisme (-p MAX)
+        if (options->type != NULL)
+        {
+            if ((strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) ||
+                (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) ||
+                (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) ||
+                (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)))
+            {
+                continue;
+            }
+        }
+
         if (options->max > 0 && nb_process_runned >= options->max)
         {
             wait(NULL);
@@ -287,37 +267,24 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             break;
 
         case 0:
-            // Processus enfant : exécuter la commande
             ex_cmd(cmd, cmd_size, path_file, argv[1]);
             exit(EXIT_SUCCESS);
 
         default:
-            // Processus parent : compter le processus lancé
             nb_process_runned++;
             break;
         }
-    }
 
-    // Attente des processus restants
-    while (nb_process_runned > 0)
-    {
-        int status;
-        wait(&status);
-        nb_process_runned--;
-
-        if (WIFEXITED(status))
+        while (nb_process_runned > 0)
         {
-            int ret = WEXITSTATUS(status);
-            if (ret > max_return_value)
-            {
-                max_return_value = ret;
-            }
+            wait(NULL);
+            nb_process_runned--;
         }
     }
 
     free(cmd);
     closedir(dirp);
-    return max_return_value;
+    return 0;
 }
 
 /**
