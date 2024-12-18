@@ -79,22 +79,6 @@ loop_options *option_struc(int argc, char *argv[])
 }
 
 /**
- * @brief Extrait une commande entre accolades `{}` à partir d'un tableau d'arguments
- *
- * @param argv Tableau d'arguments
- * @param size_of_tab Taille du tableau
- * @param cmd_size Pointeur pour stocker la taille de la commande extraite
- * @return char** Tableau contenant la commande ou NULL si elle est invalide
- */
-/**
- * @brief Extrait une commande entre accolades `{}` à partir d'un tableau d'arguments
- *
- * @param argv Tableau d'arguments
- * @param size_of_tab Taille du tableau
- * @param cmd_size Pointeur pour stocker la taille de la commande extraite
- * @return char** Tableau contenant la commande ou NULL si elle est invalide
- */
-/**
  * @brief Extrait une commande entre accolades `{}` en prenant en compte l'imbrication
  *
  * @param argv Tableau d'arguments
@@ -104,57 +88,75 @@ loop_options *option_struc(int argc, char *argv[])
  */
 char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
 {
-    size_t size_of_cmd = 0;
-    int brace_count = 0; // Compteur pour gérer les accolades imbriquées
-    size_t start_index = 0;
-    bool in_block = false;
+    if (argv == NULL || cmd_size == NULL || size_of_tab == 0)
+    {
+        fprintf(stderr, "Erreur : paramètres invalides.\n");
+        return NULL;
+    }
 
-    // Recherche du bloc entre accolades
+    size_t start_index = 0, end_index = 0;
+    int brace_count = 0;
+    bool found_start = false;
+
+    // Recherche des indices avec gestion des accolades imbriquées
     for (size_t i = 0; i < size_of_tab; i++)
     {
         if (strcmp(argv[i], "{") == 0)
         {
-            if (brace_count == 0) // Début du bloc principal
+            if (!found_start)
             {
-                start_index = i + 1;
-                in_block = true;
+                start_index = i + 1; // Position après la première accolade ouvrante
+                found_start = true;
             }
             brace_count++;
         }
         else if (strcmp(argv[i], "}") == 0)
         {
             brace_count--;
-            if (brace_count == 0) // Fin du bloc principal
+            if (brace_count == 0)
             {
-                size_of_cmd = i - start_index;
+                end_index = i; // Position de la dernière accolade fermante
                 break;
             }
         }
     }
 
-    // Vérification des accolades correctement appariées
-    if (brace_count != 0 || !in_block)
+    // Validation des accolades
+    if (!found_start || brace_count != 0 || end_index <= start_index)
     {
-        return NULL; // Accolades non fermées correctement
-    }
-
-    // Allocation de mémoire pour stocker la commande extraite
-    char **cmd = malloc((size_of_cmd + 1) * sizeof(char *));
-    if (cmd == NULL)
-    {
-        perror("malloc");
+        fprintf(stderr, "Erreur : accolades mal formées ou absentes.\n");
         return NULL;
     }
 
-    // Copie des arguments entre les accolades, sans supprimer les accolades internes
-    size_t j = 0;
-    for (size_t i = start_index; i < start_index + size_of_cmd; i++)
-    {
-        cmd[j++] = strdup(argv[i]);
-    }
-    cmd[j] = NULL; // Terminaison du tableau
-    *cmd_size = j;
+    // Calcul de la taille de la commande
+    *cmd_size = end_index - start_index;
 
+    // Allocation pour la commande extraite
+    char **cmd = malloc((*cmd_size + 1) * sizeof(char *));
+    if (cmd == NULL)
+    {
+        perror("Erreur d'allocation mémoire");
+        return NULL;
+    }
+
+    // Copie des arguments entre les accolades
+    for (size_t i = 0; i < *cmd_size; i++)
+    {
+        cmd[i] = strdup(argv[start_index + i]);
+        if (cmd[i] == NULL)
+        {
+            perror("Erreur d'allocation mémoire");
+            // Libération en cas d'échec
+            for (size_t j = 0; j < i; j++)
+            {
+                free(cmd[j]);
+            }
+            free(cmd);
+            return NULL;
+        }
+    }
+
+    cmd[*cmd_size] = NULL; // Terminaison du tableau
     return cmd;
 }
 /**
