@@ -91,12 +91,6 @@ bool contientRedi(char **s, int len)
     return false;
 }
 
-
-/**
- * @brief Libère la mémoire allouée pour les arguments
- *
- * @param args Tableau d'arguments
- */
 void free_args(char **args)
 {
     if (args)

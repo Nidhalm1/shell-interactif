@@ -79,10 +79,10 @@ loop_options *option_struc(int argc, char *argv[])
 }
 
 /**
- * @brief Extrait une commande entre accolades `{}` en prenant en compte l'imbrication
+ * @brief Extrait une commande entre accolades `{}` en détectant les imbrications.
  *
  * @param argv Tableau d'arguments
- * @param size_of_tab Taille du tableau
+ * @param size_of_tab Taille du tableau d'arguments
  * @param cmd_size Pointeur pour stocker la taille de la commande extraite
  * @return char** Tableau contenant la commande extraite ou NULL si erreur
  */
@@ -94,44 +94,57 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
         return NULL;
     }
 
-    size_t start_index = 0, end_index = 0;
     int brace_count = 0;
-    bool found_start = false;
+    size_t start_index = 0, end_index = 0;
+    bool in_block = false;
 
-    // Recherche des indices avec gestion des accolades imbriquées
+    // Recherche des indices des accolades ouvrantes et fermantes
     for (size_t i = 0; i < size_of_tab; i++)
     {
         if (strcmp(argv[i], "{") == 0)
         {
-            if (!found_start)
+            if (brace_count == 0)
             {
                 start_index = i + 1; // Position après la première accolade ouvrante
-                found_start = true;
+                in_block = true;
             }
             brace_count++;
         }
         else if (strcmp(argv[i], "}") == 0)
         {
             brace_count--;
-            if (brace_count == 0)
+            if (brace_count == 0 && in_block)
             {
                 end_index = i; // Position de la dernière accolade fermante
                 break;
             }
         }
+
+        // Vérifier si on dépasse la limite du tableau
+        if (brace_count < 0)
+        {
+            fprintf(stderr, "Erreur : accolades mal appariées (trop de fermantes).\n");
+            return NULL;
+        }
     }
 
-    // Validation des accolades
-    if (!found_start || brace_count != 0 || end_index <= start_index)
+    // Vérification des accolades
+    if (!in_block || brace_count != 0 || end_index <= start_index)
     {
         fprintf(stderr, "Erreur : accolades mal formées ou absentes.\n");
         return NULL;
     }
 
-    // Calcul de la taille de la commande
+    // Taille du bloc à extraire
     *cmd_size = end_index - start_index;
 
-    // Allocation pour la commande extraite
+    if (*cmd_size == 0)
+    {
+        fprintf(stderr, "Erreur : aucune commande entre accolades.\n");
+        return NULL;
+    }
+
+    // Allocation de mémoire pour la commande extraite
     char **cmd = malloc((*cmd_size + 1) * sizeof(char *));
     if (cmd == NULL)
     {
@@ -357,6 +370,8 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 
 {
     replace_variables(argv, size_of_tab, replace_var, loop_var);
+
+    print_argv_line(argv);
 
     return parse_and_execute(size_of_tab, argv);
 }
