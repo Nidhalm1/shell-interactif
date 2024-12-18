@@ -181,15 +181,6 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
  * @param options Structure contenant les options de filtrage
  * @return int Code de retour (0 en cas de succès, 1 en cas d'échec)
  */
-/**
- * @brief Parcourt un répertoire et exécute des commandes sur les fichiers correspondant aux options
- *
- * @param path Chemin du répertoire
- * @param argv Tableau d'arguments
- * @param size_of_tab Taille du tableau d'arguments
- * @param options Structure contenant les options de filtrage
- * @return int Code de retour (0 en cas de succès, 1 en cas d'échec)
- */
 int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *options)
 {
     if (options == NULL)
@@ -212,6 +203,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 
     cmd = get_cmd(argv, size_of_tab, &cmd_size);
 
+    int nb_process_runned = 0;
     while ((entry = readdir(dirp)) != NULL)
     {
         if (!options->opt_A && entry->d_name[0] == '.')
@@ -260,6 +252,12 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             }
         }
 
+        if (options->max > 0 && nb_process_runned >= options->max)
+        {
+            wait(NULL);
+            nb_process_runned--;
+        }
+
         pid_t p = fork();
 
         switch (p)
@@ -273,8 +271,14 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             exit(EXIT_SUCCESS);
 
         default:
-            wait(NULL);
+            nb_process_runned++;
             break;
+        }
+
+        while (nb_process_runned > 0)
+        {
+            wait(NULL);
+            nb_process_runned--;
         }
     }
 
