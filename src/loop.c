@@ -449,7 +449,6 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     }
 
     free_args(cmd);
-    free_loop_options(options);
     closedir(dirp);
     return max_return_code;
 }
