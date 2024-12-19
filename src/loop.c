@@ -96,6 +96,16 @@ loop_options *init_struc()
     return opt_struc;
 }
 
+void free_loop_options(loop_options *options)
+{
+    if (options != NULL)
+    {
+        free(options->ext);
+        free(options->type);
+        free(options);
+    }
+}
+
 /**
  * @brief Analyse les options de ligne de commande et remplit une structure loop_options
  *
@@ -391,16 +401,6 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
                 continue;
             }
             free(ext);
-
-            char *filename_without_ext = remove_ext(entry->d_name);
-            if (filename_without_ext == NULL)
-            {
-                perror("Erreur lors de la suppression de l'extension");
-                continue;
-            }
-
-            snprintf(path_file, sizeof(path_file), "%s/%s", path, filename_without_ext);
-            free(filename_without_ext);
         }
 
         pid_t p = fork();
@@ -412,8 +412,8 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
         else if (p == 0) // Processus enfant
         {
             replace_variables(cmd, cmd_size, path_file, argv[1]);
-            int ret=ex_cmd(cmd, cmd_size, path_file, argv[1]);
-            free(cmd);
+            int ret = ex_cmd(cmd, cmd_size, path_file, argv[1]);
+            free_args(cmd);
             closedir(dirp);
             exit(ret);
         }
@@ -437,17 +437,12 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             }
         }
     }
-    for (size_t i = 0; i < cmd_size; i++)
-    {
-        free(cmd[i]);
-    }
 
-    free(cmd);
+    free_args(cmd);
+    free_loop_options(options);
     closedir(dirp);
-    // printf("MAX %d\n", max_return_code);
     return max_return_code;
 }
-
 /**
  * @brief Remplace les variables dans un tableau d'arguments par une valeur donnée
  *
