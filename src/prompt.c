@@ -25,18 +25,31 @@ void get_current_directory(char *buffer, size_t size)
  *
  * @param dir Répertoire à tronquer
  */
-void troncate(char *dir)
+void troncate(char *dir, int c)
 {
     int len = strlen(dir);
-    int enlever = len - 25;
+    int enlever = len - c;
     strcpy(dir, dir + enlever);
-    dir[25] = '\0';
+    dir[c] = '\0';
     for (size_t i = 0; i < 3; i++)
     {
         dir[i] = '.';
     }
 }
-
+int longueur_int(int n)
+{
+    int longueur = 0;
+    if (n == 0)
+    {
+        return 1;
+    }
+    while (n != 0)
+    {
+        n /= 10;
+        longueur++;
+    }
+    return longueur;
+}
 /**
  * @brief Affiche le prompt
  *
@@ -50,11 +63,12 @@ char *prompt(int last_return_code)
     char color_dir[10];
     char dir[1024];
     get_current_directory(dir, sizeof(dir));
-    if (strlen(dir) > 25)
+    int len = longueur_int(last_return_code);
+    int longeur = strlen(dir);
+    if (longeur > 25)
     {
-        troncate(dir);
+        troncate(dir, 25 - len + 1);
     }
-
     if (last_return_code == 0)
     {
         strcpy(color, "\001\033[32m\002"); // Green

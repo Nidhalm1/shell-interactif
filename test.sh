@@ -17,7 +17,7 @@ if [ -d ".git" ]; then
   if [ ! -e ".gitignore" ]; then
     touch ".gitignore"
   fi
-  if ! grep "^$AUTOTEST_DIR\$" ".gitignore" >/dev/null 2>/dev/null; then
+  if ! grep "^$AUTOTEST_DIR$" ".gitignore" >/dev/null 2>/dev/null; then
     if file_ends_on_line_start ".gitignore"; then
       printf "%s\n" "$AUTOTEST_DIR" >> .gitignore
     else

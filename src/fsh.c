@@ -7,6 +7,8 @@
 #include "../include/execute.h"
 #include "../include/prompt.h"
 #include "../include/command.h"
+#include <ctype.h>
+#include <stdbool.h>
 
 void sigint_handler(int sig)
 {
@@ -23,15 +25,24 @@ void sigint_handler(int sig)
 int argc(char *input)
 {
     int count = 0;
+    int i = 0;
     int len = strlen(input);
-    for (int i = 0; i < len; i++)
+    while (i < len)
     {
-        if (input[i] == ' ')
+        while (i < len && input[i] == ' ')
+        {
+            i++;
+        }
+        if (i < len && input[i] != ' ')
         {
             count++;
+            while (i < len && input[i] != ' ')
+            {
+                i++;
+            }
         }
     }
-    return count + 1;
+    return count;
 }
 
 /**
@@ -49,53 +60,98 @@ char **argv(char *input)
         perror("malloc");
         return NULL;
     }
-    char *input_copy = strdup(input);
-    if (input_copy == NULL)
+
+    int ind = 0;
+    for (size_t i = 0; i < arg_count; i++)
     {
-        perror("strdup");
-        free(args); // Libérer args si strdup échoue
-        return NULL;
-    }
-    char *arg = strtok(input_copy, " ");
-    int i = 0;
-    while (arg != NULL)
-    {
-        args[i] = strdup(arg);
+
+        while (input[ind] == ' ')
+        {
+            ind++;
+        }
+
+        int start = ind;
+
+        while (input[ind] != ' ' && input[ind] != '\0')
+        {
+            ind++;
+        }
+
+        int len = ind - start;
+        args[i] = malloc((len + 1) * sizeof(char));
         if (args[i] == NULL)
         {
-            for (int j = 0; j < i; j++)
-            {
-                free(args[j]);
-            }
-            free(args);
-            free(input_copy);
+            perror("malloc");
+            free_args(args);
             return NULL;
         }
-        arg = strtok(NULL, " ");
-        i++;
+
+        strncpy(args[i], input + start, len);
+        args[i][len] = '\0';
     }
-    args[i] = NULL;
-    free(input_copy);
+
+    args[arg_count] = NULL;
     return args;
 }
 
-/**
- * @brief Libère la mémoire allouée pour les arguments
- *
- * @param args Tableau d'arguments
- */
-void free_args(char **args)
-{
-    if (args)
-    {
-        for (int i = 0; args[i] != NULL; i++)
-        {
-            free(args[i]);
-        }
-        free(args);
-    }
-}
 
+
+int exitt(char **argv, int argc, int lastReturncode)
+{
+    if (!contientRedi(argv, argc))
+    {
+        if (argc > 2)
+        {
+            printerr("exit: too many arguments\n");
+            free_args(argv);
+            return -13;
+        }
+        if (argv[1] == NULL)
+        {
+            free_args(argv);
+            return lastReturncode; // Quitte le shell avec le code 0
+        }
+        else if (argv[1] != NULL)
+        {
+            // Vérifier si argv[1] est un entier
+            for (size_t i = 0; i < strlen(argv[1]); i++)
+            {
+                if (!isdigit(argv[1][i]))
+                {
+                    free_args(argv);
+                    return lastReturncode;
+                }
+            }
+            int exit_code = atoi(argv[1]);
+            free_args(argv);
+            return exit_code; // Quitte le shell avec le code passé en argument
+        }
+    }
+    else
+    {
+        if (argv[1] == NULL)
+        {
+            free_args(argv);
+            return lastReturncode; // Quitte le shell avec le code 0
+        }
+        else if (argv[1] != NULL)
+        {
+            // Vérifier si argv[1] est un entier
+            for (size_t i = 0; i < strlen(argv[1]); i++)
+            {
+                if (!isdigit(argv[1][i]))
+                {
+                    free_args(argv);
+                    return lastReturncode;
+                }
+            }
+            int exit_code = atoi(argv[1]);
+            free_args(argv);
+            return exit_code; // Quitte le shell avec le code passé en argument
+        }
+    }
+    return 0;
+}
 /**
  * @brief Fonction principale du shell
  *
@@ -110,36 +166,36 @@ int main()
 
     while (1)
     {
+
         // Affichage du prompt
+
         char *input = prompt(last_return_code);
         if (!input)
         {
-            return last_return_code; // Quitter si l'utilisateur saisit Ctrl-D
-        }
-        args = argv(input);
-        if (input != NULL)
-        {
-            if (args[0] && (strcmp(args[0], "exit") == 0)) // Vérifier si args[0] est valide
-            {
-                free(input); // Libérer la mémoire allouée pour l'entrée
-                if (args[1] == NULL)
-                {
-                    free_args(args);
-                    return last_return_code; // Quitte le shell avec le code 0
-                }
-                else if (args[1] != NULL)
-                {
-                    int exit_code = atoi(args[1]);
-                    free_args(args);
-                    return exit_code; // Quitte le shell avec le code passé en argument
-                }
-            }
+            return last_return_code;
+            // Quitter si l'utilisateur saisit Ctrl-D
         }
 
+        args = argv(input);
         if (input != NULL && strcmp(input, "") == 0)
         {
             free(input);
             continue;
+        }
+        if (input != NULL && strcmp(args[0], "exit") == 0)
+        {
+            int argcc = argc(input);
+            free(input);
+            int ret = exitt(args, argcc, last_return_code);
+            if (ret != -13)
+            {
+                return ret;
+            }
+            else
+            {
+                last_return_code = 1;
+                continue;
+            }
         }
         // Parser et exécuter la commande
         last_return_code = parse_and_execute(argc(input), args);

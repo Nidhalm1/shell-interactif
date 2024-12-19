@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include "../include/execute.h"
 #include "../include/builtin.h" // Si les fonctions builtin_* sont déclarées ici
-#include "../include/command.h" // Si printerr est déclarée ici
+#include "../include/command.h"
+#include "../include/simple_commands.h"
+#include "../include/parser.h" // Si printerr est déclarée ici
 
 /**
  * @brief Parse et exécute une commande simple
@@ -18,14 +20,32 @@ int parse_and_execute_simple(int argc, char **argv)
     // Commandes internes
     if (strcmp(argv[0], "pwd") == 0)
     {
-        if (argc > 1) // genrer le cas de PWD -P
+        if (!contientRedi(argv, argc)) // elle contient pas des redirections
         {
-            printerr("pwd: too many arguments\n");
-            return 1; // Code d'erreur
+            if (argc > 2)
+            {
+                printerr("pwd: too many arguments\n");
+                return 1; // Code d'erreur
+            }
+            if (argc == 2)
+            {
+                if (strcmp(argv[1], "-p") != 0)
+                {
+                    printerr("pwd: ");
+                    printerr(argv[1]);
+                    printerr(": invalid␣argument\n");
+                    return 1;
+                }
+                return builtin_pwd(argv);
+            }
+            else
+            {
+                return builtin_pwd(argv);
+            }
         }
         else
         {
-            return builtin_pwd();
+            return builtin_pwd(argv);
         }
     }
     else if (strcmp(argv[0], "cd") == 0)
@@ -63,13 +83,9 @@ int parse_and_execute_simple(int argc, char **argv)
         }
     }
 
-    else if (strcmp(argv[0], "for") == 0)
-    {
-        // TODO : Implémenter la commande for
-        return 0;
-    }
-
     // Commande externe
-
-    return execute_command(argv[0], STDIN_FILENO, STDOUT_FILENO, argv);
+    else
+    {
+        return execute_command(argv[0], STDIN_FILENO, STDOUT_FILENO, argv);
+    }
 }

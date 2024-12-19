@@ -19,22 +19,31 @@
 char *find_cmd(char *argv[], size_t size_of_tab, size_t *start_index)
 {
     size_t size_of_cmd = 0;
+    int brace_count = 0;
     bool find = false;
 
     for (size_t i = *start_index; i < size_of_tab; i++)
     {
         if (strcmp(argv[i], "{") == 0)
         {
-            find = true;
-            continue;
-        }
-        if (strcmp(argv[i], "}") == 0 && find)
-        {
-            break;
+            brace_count++;
+            if (brace_count == 1)
+            {
+                find = true;
+                continue; // passer la première accolade ouvrante
+            }
         }
         if (find)
         {
             size_of_cmd += strlen(argv[i]) + 1;
+        }
+        if (strcmp(argv[i], "}") == 0 && find)
+        {
+            brace_count--; // décrémenter le compteur d'accolades
+            if (brace_count == 0)
+            {
+                break;
+            }
         }
     }
 
@@ -51,28 +60,37 @@ char *find_cmd(char *argv[], size_t size_of_tab, size_t *start_index)
     }
 
     size_t parc = 0;
+    brace_count = 0;
     find = false;
     for (size_t i = *start_index; i < size_of_tab; i++)
     {
         if (strcmp(argv[i], "{") == 0)
         {
-            find = true;
-            continue;
-        }
-        if (strcmp(argv[i], "}") == 0 && find)
-        {
-            *start_index = i + 1;
-            break;
+            brace_count++;
+            if (brace_count == 1)
+            {
+                find = true;
+                continue; // passer la première accolade ouvrante
+            }
         }
         if (find)
         {
             if (parc > 0)
                 cmd[parc++] = ' ';
-            strcpy(&cmd[parc], argv[i]);
-            parc += strlen(argv[i]);
+            strcpy(&cmd[parc], argv[i]); // copier l'argument
+            parc += strlen(argv[i]);     // incrémenter le parcours
+        }
+        if (strcmp(argv[i], "}") == 0 && find)
+        {
+            brace_count--;
+            if (brace_count == 0)
+            {
+                *start_index = i + 1;
+                break;
+            }
         }
     }
-    cmd[parc] = '\0';
+    cmd[parc - 1] = '\0'; // supprimer le dernier caractère
     return cmd;
 }
 
@@ -113,10 +131,49 @@ int if_function(int argc, char **argv)
         return 1;
     }
 
-    // Exécuter la condition (TEST)
-    int test = exec_test(argv[1]);
+    // Construire la condition (TEST) à partir des arguments avant '{'
+    size_t test_size = 0;
+    for (size_t i = 1; i < (size_t)argc; i++)
+    {
+        if (strcmp(argv[i], "{") == 0)
+        {
+            break;
+        }
+        test_size += strlen(argv[i]) + 1;
+    }
 
-    size_t start_index = 2;
+    if (test_size == 0)
+    {
+        printerr("Erreur : Condition de test non trouvée.\n");
+        return 1;
+    }
+
+    char *test_cmd = malloc(test_size * sizeof(char));
+    if (test_cmd == NULL)
+    {
+        printerr("Erreur d'allocation mémoire pour test_cmd\n");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t parc = 0;
+    for (size_t i = 1; i < (size_t)argc; i++)
+    {
+        if (strcmp(argv[i], "{") == 0)
+        {
+            break;
+        }
+        if (parc > 0)
+            test_cmd[parc++] = ' ';
+        strcpy(&test_cmd[parc], argv[i]);
+        parc += strlen(argv[i]);
+    }
+    test_cmd[parc] = '\0';
+
+    // Exécuter la condition (TEST)
+    int test = exec_test(test_cmd);
+    free(test_cmd);
+
+    size_t start_index = 0;
     char *cmd1 = find_cmd(argv, argc, &start_index);
     if (cmd1 == NULL)
     {
@@ -127,7 +184,18 @@ int if_function(int argc, char **argv)
     if (test == 0)
     {
         // Exécuter la première commande
-        int ret = exec_test(cmd1);
+        char *args[128];
+        size_t i = 0;
+
+        char *token = strtok(cmd1, " ");
+        while (token != NULL && i < 127)
+        {
+            args[i++] = token;
+            token = strtok(NULL, " ");
+        }
+        args[i] = NULL;
+
+        int ret = parse_and_execute(i, args);
         free(cmd1);
         return ret;
     }
@@ -145,8 +213,18 @@ int if_function(int argc, char **argv)
                 return 1;
             }
 
-            // Exécuter la commande else
-            int ret = exec_test(cmd2);
+            char *args[128];
+            size_t i = 0;
+
+            char *token = strtok(cmd2, " ");
+            while (token != NULL && i < 127)
+            {
+                args[i++] = token;
+                token = strtok(NULL, " ");
+            }
+            args[i] = NULL;
+
+            int ret = parse_and_execute(i, args);
             free(cmd1);
             free(cmd2);
             return ret;

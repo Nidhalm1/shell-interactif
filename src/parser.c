@@ -12,6 +12,8 @@
 #include "../include/piped_commands.h"
 #include "../include/if_function.h"
 #include "../include/structured_command.h"
+#include "../include/parser.h"
+#include <stdbool.h>
 
 /**
  * @brief Parse et exécute une commande
@@ -36,13 +38,15 @@ int parse_and_execute(int argc, char **argv)
     // Si la première commande est "For", on lance une boucle
     if (argv[0] != NULL && strcmp(argv[0], "for") == 0)
     {
+
         loop_options *options = option_struc(argc, argv);
-        return loop_function(argv[3], argv, argc, options);
+        int ret = loop_function(argv[3], argv, argc, options);
+        free_loop_options(options);
+        return ret;
     }
 
     if (argv[0] != NULL && strcmp(argv[0], "if") == 0)
     {
-        // TODO : Implémenter la commande if
         return if_function(argc, argv);
     }
 
@@ -67,5 +71,37 @@ int parse_and_execute(int argc, char **argv)
     }
 
     // Commande externe : appel à la fonction pour exécuter la commande simple
-    return parse_and_execute_simple(argc, argv);
+    // si elle contient des redirections
+    if (contientRedi(argv, argc) && (strcmp(argv[0], "pwd") == 0 || strcmp(argv[0], "ftype") == 0))
+    {
+        return redirections(STDIN_FILENO, STDOUT_FILENO, argv, argc);
+    }
+    else
+    {
+        return parse_and_execute_simple(argc, argv);
+    }
+}
+
+bool contientRedi(char **s, int len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        if (strcmp(s[i], ">") == 0 || strcmp(s[i], "<") == 0 || strcmp(s[i], ">>") == 0 || strcmp(s[i], "2>") == 0 || strcmp(s[i], "2>>") == 0 || strcmp(s[i], ">|") == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void free_args(char **args)
+{
+    if (args)
+    {
+        for (int i = 0; args[i] != NULL; i++)
+        {
+            free(args[i]);
+        }
+        free(args);
+    }
 }
