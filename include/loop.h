@@ -24,12 +24,12 @@ typedef struct
     int max;
 } loop_options;
 
-int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *);
-int add_reference(char ***refs, size_t *size, size_t *capacity, const char *new_ref);
+int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var);
 char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size);
 char *get_ext(const char *val);
 char *remove_ext(const char *file);
 loop_options *init_struc();
 loop_options *option_struc(int argc, char *argv[]);
+void replace_variables(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var);
 int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *options);
 #endif
