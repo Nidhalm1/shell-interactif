@@ -302,7 +302,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 {
     if (options == NULL)
     {
-        printerr("Erreur : les options sont nulles.\n");
+        fprintf(stderr, "Erreur : les options sont nulles.\n");
         return 1;
     }
 
@@ -326,12 +326,9 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
         return 1;
     }
 
-    int nb_process_runned = 0;
-
     // Parcours des entrées dans le répertoire
     while ((entry = readdir(dirp)) != NULL)
     {
-        bool can_ex = false;
         char path_file[MAX_LENGTH];
         snprintf(path_file, sizeof(path_file), "%s/%s", path, entry->d_name);
 
@@ -356,28 +353,22 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
         // 3. Filtrage par type `-t`
         if (options->type != NULL)
         {
-            // Filtrage basé sur le type spécifié
-            if (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) // Répertoires
+            if (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode))
             {
                 continue;
             }
-            if (strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) // Fichiers ordinaires
+            if (strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode))
             {
                 continue;
             }
-            if (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) // Liens symboliques
+            if (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode))
             {
                 continue;
             }
-            if (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)) // Pipes nommés
+            if (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode))
             {
                 continue;
             }
-            can_ex = true;
-        }
-        else
-        {
-            can_ex = true;
         }
 
         // 4. Filtrage par extension `-e`
@@ -399,47 +390,28 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             {
                 fprintf(stderr, "Erreur lors de la récursion dans le répertoire : %s\n", path_file);
             }
+            continue;
         }
 
-        // 6. Gestion du nombre maximum de processus avec `-p`
-        if (options->max > 0 && nb_process_runned >= options->max)
-        {
-            wait(NULL);
-            nb_process_runned--;
-        }
-
-        // 7. Création d'un processus pour traiter les entrées filtrées
+        // Exécution des commandes structurelles pour l'élément actuel
         pid_t p = fork();
 
-        switch (p)
+        if (p == -1)
         {
-        case -1: // Erreur lors du fork
             perror("Erreur lors du fork");
-            break;
-
-        case 0: // Processus enfant
-            if (can_ex)
-            {
-                replace_variables(cmd, cmd_size, path_file, argv[1]);
-                ex_cmd(cmd, cmd_size, path_file, argv[1]);
-                exit(EXIT_SUCCESS);
-            }
-            else
-            {
-                exit(EXIT_SUCCESS);
-            }
-
-        default: // Processus parent
-            nb_process_runned++;
-            break;
         }
-    }
-
-    // Attendre la fin de tous les processus enfants
-    while (nb_process_runned > 0)
-    {
-        wait(NULL);
-        nb_process_runned--;
+        else if (p == 0) // Processus enfant
+        {
+            replace_variables(cmd, cmd_size, path_file, argv[1]);
+            ex_cmd(cmd, cmd_size, path_file, argv[1]);
+            free(cmd);
+            closedir(dirp);
+            exit(EXIT_SUCCESS);
+        }
+        else // Processus parent
+        {
+            wait(NULL); // Attendre la fin de l'exécution de l'élément actuel
+        }
     }
 
     // Libération des ressources
@@ -532,7 +504,7 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 {
     replace_variables(argv, size_of_tab, replace_var, loop_var);
 
-    // print_argv_line(argv);
+    //print_argv_line(argv);
 
     return parse_and_execute(size_of_tab, argv);
 }

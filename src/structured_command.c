@@ -31,11 +31,11 @@ int parse_and_execute_structured(int argc, char **argv)
             if (i > start) // S'il y a une commande à exécuter
             {
                 /*printf("Exécution de la commande: ");
-                for (int j = start; j < i; j++)
-                {
-                    printf("%s ", argv[j]);
-                }
-                printf("\n");*/
+                 for (int j = start; j < i; j++)
+                 {
+                     printf("%s ", argv[j]);
+                 }
+                 printf("\n");*/
 
                 // Vérifier si c'est une commande `for`
                 if (strcmp(argv[start], "for") == 0)
