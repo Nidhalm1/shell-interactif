@@ -15,40 +15,6 @@
 #include <../include/execute.h>
 #include <../include/command.h>
 
-bool apply_filters(const struct dirent *entry, const struct stat *st, loop_options *options)
-{
-    // Filtrer les fichiers cachés
-    if (!options->opt_A && entry->d_name[0] == '.')
-    {
-        return false;
-    }
-
-    // Filtrer par type
-    if (options->type != NULL)
-    {
-        char type = options->type[0];
-        if ((type == 'f' && !S_ISREG(st->st_mode)) ||
-            (type == 'd' && !S_ISDIR(st->st_mode)) ||
-            (type == 'l' && !S_ISLNK(st->st_mode)) ||
-            (type == 'p' && !S_ISFIFO(st->st_mode)))
-        {
-            return false;
-        }
-    }
-
-    // Filtrer par extension
-    if (options->ext != NULL)
-    {
-        char *ext = strrchr(entry->d_name, '.');
-        if (!ext || strcmp(ext + 1, options->ext) != 0)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 /**
  * @brief Initialise une structure loop_options
  *
@@ -226,7 +192,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     DIR *dirp = opendir(path);
     if (dirp == NULL)
     {
-        perror("Erreur d'ouverture du répertoire");
+        printerr("Erreur d'ouverture du répertoire\n");
         return 1;
     }
 
@@ -236,48 +202,64 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     size_t cmd_size = 0;
 
     cmd = get_cmd(argv, size_of_tab, &cmd_size);
-    if (cmd == NULL)
-    {
-        closedir(dirp);
-        return 1;
-    }
 
     int nb_process_runned = 0;
-    int max_return_code = 0;
-
     while ((entry = readdir(dirp)) != NULL)
     {
-        char full_path[MAX_LENGTH];
-        snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
+        if (!options->opt_A && entry->d_name[0] == '.')
+        {
+            continue;
+        }
 
-        if (lstat(full_path, &st) == -1)
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+        {
+            continue;
+        }
+
+        char path_file[MAX_LENGTH];
+        snprintf(path_file, sizeof(path_file), "%s/%s", path, entry->d_name);
+
+        if (lstat(path_file, &st) == -1)
         {
             perror("Erreur avec lstat");
             continue;
         }
 
-        if (!apply_filters(entry, &st, options))
+        if (options->opt_r && S_ISDIR(st.st_mode))
         {
-            continue;
+            loop_function(path_file, argv, size_of_tab, options);
         }
 
-        // Substituer la variable de boucle
-        char **substituted_args = malloc((cmd_size + 1) * sizeof(char *));
-        if (!substituted_args)
+        if (options->ext != NULL)
         {
-            perror("malloc");
-            continue;
+            char *ext = get_ext(entry->d_name);
+            if (ext == NULL || strcmp(ext, options->ext) != 0)
+            {
+                free(ext);
+                continue;
+            }
+            free(ext);
         }
 
-        for (size_t i = 0; i < cmd_size; i++)
+        if (options->type != NULL)
         {
-            substituted_args[i] = strdup(cmd[i]);
-            replace_variables(&substituted_args[i], 1, full_path, argv[1]);
+            if ((strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) ||
+                (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) ||
+                (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) ||
+                (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)))
+            {
+                continue;
+            }
         }
-        substituted_args[cmd_size] = NULL;
 
-        // Exécuter les commandes
+        if (options->max > 0 && nb_process_runned >= options->max)
+        {
+            wait(NULL);
+            nb_process_runned--;
+        }
+
         pid_t p = fork();
+
         switch (p)
         {
         case -1:
@@ -285,7 +267,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             break;
 
         case 0:
-            parse_and_execute(cmd_size, substituted_args);
+            ex_cmd(cmd, cmd_size, path_file, argv[1]);
             exit(EXIT_SUCCESS);
 
         default:
@@ -293,47 +275,16 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             break;
         }
 
-        if (options->max > 0 && nb_process_runned >= options->max)
+        while (nb_process_runned > 0)
         {
-            int status;
-            wait(&status);
+            wait(NULL);
             nb_process_runned--;
-            if (WIFEXITED(status))
-            {
-                int ret_code = WEXITSTATUS(status);
-                if (ret_code > max_return_code)
-                {
-                    max_return_code = ret_code;
-                }
-            }
-        }
-
-        // Libérer les arguments substitués
-        for (size_t i = 0; i < cmd_size; i++)
-        {
-            free(substituted_args[i]);
-        }
-        free(substituted_args);
-    }
-
-    while (nb_process_runned > 0)
-    {
-        int status;
-        wait(&status);
-        nb_process_runned--;
-        if (WIFEXITED(status))
-        {
-            int ret_code = WEXITSTATUS(status);
-            if (ret_code > max_return_code)
-            {
-                max_return_code = ret_code;
-            }
         }
     }
 
     free(cmd);
     closedir(dirp);
-    return max_return_code;
+    return 0;
 }
 
 /**
@@ -420,7 +371,7 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 {
     replace_variables(argv, size_of_tab, replace_var, loop_var);
 
-    // print_argv_line(argv);
+    print_argv_line(argv);
 
     return parse_and_execute(size_of_tab, argv);
 }
