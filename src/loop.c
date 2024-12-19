@@ -329,14 +329,8 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     // Parcours des entrées dans le répertoire
     while ((entry = readdir(dirp)) != NULL)
     {
-        char path_file[MAX_LENGTH];
-        snprintf(path_file, sizeof(path_file), "%s/%s", path, entry->d_name);
 
-        if (lstat(path_file, &st) == -1)
-        {
-            perror("Erreur avec lstat");
-            continue;
-        }
+        // print_loop_options(options);
 
         // 1. Ignorer les fichiers cachés si `-A` n'est pas activé
         if (!options->opt_A && entry->d_name[0] == '.')
@@ -347,6 +341,15 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
         // 2. Ignorer les entrées spéciales "." et ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         {
+            continue;
+        }
+
+        char path_file[MAX_LENGTH];
+        snprintf(path_file, sizeof(path_file), "%s/%s", path, entry->d_name);
+
+        if (lstat(path_file, &st) == -1)
+        {
+            perror("Erreur avec lstat");
             continue;
         }
 
@@ -374,23 +377,40 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
         // 4. Filtrage par extension `-e`
         if (options->ext != NULL)
         {
-            char *ext = get_ext(entry->d_name);
+            char *ext = get_ext(entry->d_name); // Obtenir l'extension du fichier
             if (ext == NULL || strcmp(ext, options->ext) != 0)
             {
                 free(ext);
-                continue;
+                continue; // Passer au fichier suivant si l'extension ne correspond pas
             }
             free(ext);
+
+            // Retirer l'extension pour alimenter la variable de boucle
+            char *filename_without_ext = remove_ext(entry->d_name);
+            if (filename_without_ext == NULL)
+            {
+                perror("Erreur lors de la suppression de l'extension");
+                continue; // En cas d'erreur, ignorer ce fichier
+            }
+
+            // Remplacer path_file par la version amputée si nécessaire
+            snprintf(path_file, sizeof(path_file), "%s/%s", path, filename_without_ext);
+            free(filename_without_ext); // Libérer la mémoire
         }
 
         // 5. Gestion des sous-répertoires si `-r` est activé
         if (options->opt_r && S_ISDIR(st.st_mode))
         {
-            if (loop_function(path_file, argv, size_of_tab, options) != 0)
+            // Créer une copie séparée du chemin pour la récursion
+            char sub_dir[MAX_LENGTH];
+            snprintf(sub_dir, sizeof(sub_dir), "%s/%s", path, entry->d_name);
+
+            // Appeler récursivement loop_function
+            if (loop_function(sub_dir, argv, size_of_tab, options) != 0)
             {
-                fprintf(stderr, "Erreur lors de la récursion dans le répertoire : %s\n", path_file);
+                fprintf(stderr, "Erreur lors de la récursion dans le répertoire : %s\n", sub_dir);
             }
-            continue;
+            continue; // Passer à l'entrée suivante après la récursion
         }
 
         // Exécution des commandes structurelles pour l'élément actuel
@@ -504,7 +524,7 @@ int ex_cmd(char *argv[], size_t size_of_tab, char *replace_var, char *loop_var)
 {
     replace_variables(argv, size_of_tab, replace_var, loop_var);
 
-    //print_argv_line(argv);
+    // print_argv_line(argv);
 
     return parse_and_execute(size_of_tab, argv);
 }
