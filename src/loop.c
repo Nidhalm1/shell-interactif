@@ -321,19 +321,18 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
         return 1;
     }
 
+    int max_return_code = 0; // Valeur initiale à 0
+
     // Parcours des entrées dans le répertoire
     while ((entry = readdir(dirp)) != NULL)
     {
-
-        // print_loop_options(options);
-
-        // 1. Ignorer les fichiers cachés si `-A` n'est pas activé
+        // Ignorer les fichiers cachés si `-A` n'est pas activé
         if (!options->opt_A && entry->d_name[0] == '.')
         {
             continue;
         }
 
-        // 2. Ignorer les entrées spéciales "." et ".."
+        // Ignorer les entrées spéciales "." et ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         {
             continue;
@@ -348,19 +347,17 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             continue;
         }
 
-        //  Gestion des sous-répertoires si `-r` est activé
+        // Gestion des sous-répertoires si `-r` est activé
         if (options->opt_r && S_ISDIR(st.st_mode))
         {
-            // Créer une copie séparée du chemin pour la récursion
             char sub_dir[MAX_LENGTH];
             snprintf(sub_dir, sizeof(sub_dir), "%s/%s", path, entry->d_name);
 
-            // Appeler récursivement loop_function
-            if (loop_function(sub_dir, argv, size_of_tab, options) != 0)
+            int sub_return_code = loop_function(sub_dir, argv, size_of_tab, options);
+            if (sub_return_code > max_return_code)
             {
-                fprintf(stderr, "Erreur lors de la récursion dans le répertoire : %s\n", sub_dir);
+                max_return_code = sub_return_code;
             }
-            continue; // Passer à l'entrée suivante après la récursion
         }
 
         // Filtrage par type `-t`
@@ -384,28 +381,26 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             }
         }
 
-        //  Filtrage par extension `-e`
+        // Filtrage par extension `-e`
         if (options->ext != NULL)
         {
-            char *ext = get_ext(entry->d_name); // Obtenir l'extension du fichier
+            char *ext = get_ext(entry->d_name);
             if (ext == NULL || strcmp(ext, options->ext) != 0)
             {
                 free(ext);
-                continue; // Passer au fichier suivant si l'extension ne correspond pas
+                continue;
             }
             free(ext);
 
-            // Retirer l'extension pour alimenter la variable de boucle
             char *filename_without_ext = remove_ext(entry->d_name);
             if (filename_without_ext == NULL)
             {
                 perror("Erreur lors de la suppression de l'extension");
-                continue; // En cas d'erreur, ignorer ce fichier
+                continue;
             }
 
-            // Remplacer path_file par la version amputée si nécessaire
             snprintf(path_file, sizeof(path_file), "%s/%s", path, filename_without_ext);
-            free(filename_without_ext); // Libérer la mémoire
+            free(filename_without_ext);
         }
 
         pid_t p = fork();
@@ -420,18 +415,37 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             ex_cmd(cmd, cmd_size, path_file, argv[1]);
             free(cmd);
             closedir(dirp);
-            exit(EXIT_SUCCESS);
+            exit(++max_return_code);
         }
         else // Processus parent
         {
-            wait(NULL); // Attendre la fin de l'exécution de l'élément actuel
+            int status;
+            wait(&status); // Attendre la fin du processus enfant
+
+            // Mise à jour du code de retour maximum
+            if (WIFEXITED(status))
+            {
+                int return_code = WEXITSTATUS(status);
+                if (return_code > max_return_code)
+                {
+                    max_return_code = return_code;
+                }
+            }
+            else if (WIFSIGNALED(status))
+            {
+                max_return_code = 255; // Si interrompu par un signal
+            }
         }
     }
+    for (size_t i = 0; i < cmd_size; i++)
+    {
+        free(cmd[i]);
+    }
 
-    // Libération des ressources
     free(cmd);
     closedir(dirp);
-    return 0;
+    // printf("MAX %d\n", max_return_code);
+    return max_return_code;
 }
 
 /**
