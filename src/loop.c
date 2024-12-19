@@ -212,6 +212,7 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
 {
     if (argv == NULL || cmd_size == NULL || size_of_tab == 0)
     {
+
         fprintf(stderr, "Erreur : paramètres invalides.\n");
         return NULL;
     }
@@ -245,6 +246,7 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
         // Vérifier si on dépasse la limite du tableau
         if (brace_count < 0)
         {
+
             fprintf(stderr, "Erreur : accolades mal appariées (trop de fermantes).\n");
             return NULL;
         }
@@ -291,7 +293,9 @@ char **get_cmd(char *argv[], size_t size_of_tab, size_t *cmd_size)
         }
     }
 
-    cmd[*cmd_size] = NULL; // Terminaison du tableau
+    cmd[*cmd_size] = NULL;
+
+    // Terminaison du tableau
     return cmd;
 }
 /**
@@ -425,6 +429,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             replace_variables(cmd, cmd_size, path_file, argv[1]);
             int ret = ex_cmd(cmd, cmd_size, path_file, argv[1]);
             free_loop_options(options);
+            free(cmd_size);
             free_args(cmd);
             closedir(dirp);
             exit(ret);
