@@ -40,7 +40,6 @@ int parse_and_execute(int argc, char **argv)
     {
 
         loop_options *options = option_struc(argc, argv);
-
         int ret = loop_function(argv[3], argv, argc, options);
         free_loop_options(options);
         return ret;

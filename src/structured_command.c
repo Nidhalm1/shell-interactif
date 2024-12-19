@@ -72,6 +72,7 @@ int parse_and_execute_structured(int argc, char **argv)
             if (brace_count < 0)
             {
                 fprintf(stderr, "Erreur : accolades mal appariées.\n");
+
                 return 1;
             }
         }
