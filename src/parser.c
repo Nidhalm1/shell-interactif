@@ -39,6 +39,7 @@ int parse_and_execute(int argc, char **argv)
     if (argv[0] != NULL && strcmp(argv[0], "for") == 0)
     {
         loop_options *options = option_struc(argc, argv);
+
         return loop_function(argv[3], argv, argc, options);
     }
 

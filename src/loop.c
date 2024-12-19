@@ -57,6 +57,25 @@ void print_loop_options(loop_options *options)
 }
 
 /**
+ * @brief Affiche l'index et la valeur de chaque argument dans un tableau arg[]
+ *
+ * @param arg Tableau d'arguments
+ */
+void print_args(char *arg[])
+{
+    if (arg == NULL)
+    {
+        printf("Erreur : le tableau arg est NULL.\n");
+        return;
+    }
+
+    for (int i = 0; arg[i] != NULL; i++)
+    {
+        printf("Index %d: %s\n", i, arg[i]);
+    }
+}
+
+/**
  * @brief Initialise une structure loop_options
  *
  * @return loop_options* Pointeur vers la structure initialisée
@@ -293,6 +312,8 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     if (dirp == NULL)
     {
         print_loop_options(options);
+        printf("Les argumument\n");
+        print_args(argv);
         printerr("Erreur d'ouverture du répertoire\n");
         return 1;
     }
@@ -307,8 +328,6 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     int nb_process_runned = 0;
     while ((entry = readdir(dirp)) != NULL)
     {
-
-        print_loop_options(options);
 
         if (!options->opt_A && entry->d_name[0] == '.')
         {
@@ -371,6 +390,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             break;
 
         case 0:
+
             ex_cmd(cmd, cmd_size, path_file, argv[1]);
             exit(EXIT_SUCCESS);
 
