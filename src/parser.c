@@ -38,7 +38,9 @@ int parse_and_execute(int argc, char **argv)
     // Si la première commande est "For", on lance une boucle
     if (argv[0] != NULL && strcmp(argv[0], "for") == 0)
     {
+        
         loop_options *options = option_struc(argc, argv);
+
         return loop_function(argv[3], argv, argc, options);
     }
 

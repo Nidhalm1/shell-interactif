@@ -15,6 +15,66 @@
 #include <../include/execute.h>
 #include <../include/command.h>
 
+void print_loop_options(loop_options *options)
+{
+    if (options == NULL)
+    {
+        printf("Options are NULL.\n");
+        return;
+    }
+
+    printf("Loop Options:\n");
+
+    printf("  -A (All files): %s\n", options->opt_A ? "Enabled" : "Disabled");
+    printf("  -r (Recursive): %s\n", options->opt_r ? "Enabled" : "Disabled");
+
+    if (options->ext != NULL)
+    {
+        printf("  -e (Extension): %s\n", options->ext);
+    }
+    else
+    {
+        printf("  -e (Extension): Not set\n");
+    }
+
+    if (options->type != NULL)
+    {
+        printf("  -t (Type): %s\n", options->type);
+    }
+    else
+    {
+        printf("  -t (Type): Not set\n");
+    }
+
+    if (options->max != -1)
+    {
+        printf("  -p (Max processes): %d\n", options->max);
+    }
+    else
+    {
+        printf("  -p (Max processes): Not set\n");
+    }
+}
+
+/**
+ * @brief Affiche l'index et la valeur de chaque argument dans un tableau arg[]
+ *
+ * @param arg Tableau d'arguments
+ */
+void print_args(char *arg[])
+{
+    if (arg == NULL)
+    {
+        printf("Erreur : le tableau arg est NULL.\n");
+        return;
+    }
+
+    for (int i = 0; arg[i] != NULL; i++)
+    {
+        printf("Index %d: %s\n", i, arg[i]);
+    }
+}
+
 /**
  * @brief Initialise une structure loop_options
  *
@@ -43,35 +103,87 @@ loop_options *init_struc()
  * @param argv Tableau d'arguments
  * @return loop_options* Pointeur vers la structure avec les options analysées ou NULL en cas d'erreur
  */
+/**
+ * @brief Analyse les options de ligne de commande et remplit une structure loop_options
+ *
+ * @param argc Nombre d'arguments
+ * @param argv Tableau d'arguments
+ * @return loop_options* Pointeur vers la structure avec les options analysées ou NULL en cas d'erreur
+ */
 loop_options *option_struc(int argc, char *argv[])
 {
     loop_options *opt_struc = init_struc();
-    int opt;
-    optind = 4;
-    while ((opt = getopt(argc, argv, "Are:t:p:")) != -1)
+    bool can_stock_A = true;
+    bool can_stock_r = true;
+    bool can_stock_t = true;
+    bool can_stock_p = true;
+    bool can_stock_e = true;
+
+    for (int i = 4; i < argc; i++)
     {
-        switch (opt)
+        if (strcmp(argv[i], "-A") == 0 && can_stock_A)
         {
-        case 'A':
             opt_struc->opt_A = true;
-            break;
-        case 'r':
+            can_stock_A = false;
+        }
+        if (strcmp(argv[i], "-r") == 0 && can_stock_r)
+        {
             opt_struc->opt_r = true;
-            break;
-        case 'e':
-            opt_struc->ext = optarg;
-            break;
-        case 't':
-            opt_struc->type = optarg;
-            break;
-        case 'p':
-            opt_struc->max = atoi(optarg);
-            break;
-        case '?':
-            free(opt_struc);
-            return NULL;
-        default:
-            break;
+            can_stock_r = false;
+        }
+        if (strcmp(argv[i], "-e") == 0 && can_stock_e)
+        {
+            if (i + 1 < argc && argv[i + 1][0] != '-')
+            {
+                opt_struc->ext = strdup(argv[++i]);
+                can_stock_e = false;
+                if (!opt_struc->ext)
+                {
+                    perror("Erreur d'allocation mémoire pour l'option -e");
+                    free(opt_struc);
+                    return NULL;
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Erreur : l'option -e nécessite un argument valide.\n");
+                free(opt_struc);
+                return NULL;
+            }
+        }
+        if (strcmp(argv[i], "-t") == 0 && can_stock_t)
+        {
+            if (i + 1 < argc && argv[i + 1][0] != '-')
+            {
+                opt_struc->type = strdup(argv[++i]);
+                can_stock_t = false;
+                if (!opt_struc->type)
+                {
+                    perror("Erreur d'allocation mémoire pour l'option -t");
+                    free(opt_struc);
+                    return NULL;
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Erreur : l'option -t nécessite un argument valide (f, d, l, p).\n");
+                free(opt_struc);
+                return NULL;
+            }
+        }
+        if (strcmp(argv[i], "-p") == 0 && can_stock_p)
+        {
+            if (i + 1 < argc && argv[i + 1][0] != '-' && atoi(argv[i + 1]) > 0)
+            {
+                opt_struc->max = atoi(argv[++i]);
+                can_stock_p = false;
+            }
+            else
+            {
+                fprintf(stderr, "Erreur : l'option -p nécessite un entier strictement positif.\n");
+                free(opt_struc);
+                return NULL;
+            }
         }
     }
 
@@ -185,14 +297,14 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 {
     if (options == NULL)
     {
-        printerr("Option non reconnue.\n");
+        fprintf(stderr, "Erreur : les options sont nulles.\n");
         return 1;
     }
 
     DIR *dirp = opendir(path);
     if (dirp == NULL)
     {
-        printerr("Erreur d'ouverture du répertoire\n");
+        fprintf(stderr, "Erreur d'ouverture du répertoire : %s\n", path);
         return 1;
     }
 
@@ -202,15 +314,26 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     size_t cmd_size = 0;
 
     cmd = get_cmd(argv, size_of_tab, &cmd_size);
+    if (cmd == NULL)
+    {
+        fprintf(stderr, "Erreur : commande non valide ou mal formée.\n");
+        closedir(dirp);
+        return 1;
+    }
 
-    int nb_process_runned = 0;
+    // Parcours des entrées dans le répertoire
     while ((entry = readdir(dirp)) != NULL)
     {
+
+        // print_loop_options(options);
+
+        // 1. Ignorer les fichiers cachés si `-A` n'est pas activé
         if (!options->opt_A && entry->d_name[0] == '.')
         {
             continue;
         }
 
+        // 2. Ignorer les entrées spéciales "." et ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         {
             continue;
@@ -225,63 +348,87 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             continue;
         }
 
+        //  Gestion des sous-répertoires si `-r` est activé
         if (options->opt_r && S_ISDIR(st.st_mode))
         {
-            loop_function(path_file, argv, size_of_tab, options);
+            // Créer une copie séparée du chemin pour la récursion
+            char sub_dir[MAX_LENGTH];
+            snprintf(sub_dir, sizeof(sub_dir), "%s/%s", path, entry->d_name);
+
+            // Appeler récursivement loop_function
+            if (loop_function(sub_dir, argv, size_of_tab, options) != 0)
+            {
+                fprintf(stderr, "Erreur lors de la récursion dans le répertoire : %s\n", sub_dir);
+            }
+            continue; // Passer à l'entrée suivante après la récursion
         }
 
+        // Filtrage par type `-t`
+        if (options->type != NULL)
+        {
+            if (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode))
+            {
+                continue;
+            }
+            if (strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode))
+            {
+                continue;
+            }
+            if (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode))
+            {
+                continue;
+            }
+            if (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode))
+            {
+                continue;
+            }
+        }
+
+        //  Filtrage par extension `-e`
         if (options->ext != NULL)
         {
-            char *ext = get_ext(entry->d_name);
+            char *ext = get_ext(entry->d_name); // Obtenir l'extension du fichier
             if (ext == NULL || strcmp(ext, options->ext) != 0)
             {
                 free(ext);
-                continue;
+                continue; // Passer au fichier suivant si l'extension ne correspond pas
             }
             free(ext);
-        }
 
-        if (options->type != NULL)
-        {
-            if ((strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) ||
-                (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) ||
-                (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) ||
-                (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)))
+            // Retirer l'extension pour alimenter la variable de boucle
+            char *filename_without_ext = remove_ext(entry->d_name);
+            if (filename_without_ext == NULL)
             {
-                continue;
+                perror("Erreur lors de la suppression de l'extension");
+                continue; // En cas d'erreur, ignorer ce fichier
             }
-        }
 
-        if (options->max > 0 && nb_process_runned >= options->max)
-        {
-            wait(NULL);
-            nb_process_runned--;
+            // Remplacer path_file par la version amputée si nécessaire
+            snprintf(path_file, sizeof(path_file), "%s/%s", path, filename_without_ext);
+            free(filename_without_ext); // Libérer la mémoire
         }
 
         pid_t p = fork();
 
-        switch (p)
+        if (p == -1)
         {
-        case -1:
             perror("Erreur lors du fork");
-            break;
-
-        case 0:
-            ex_cmd(cmd, cmd_size, path_file, argv[1]);
-            exit(EXIT_SUCCESS);
-
-        default:
-            nb_process_runned++;
-            break;
         }
-
-        while (nb_process_runned > 0)
+        else if (p == 0) // Processus enfant
         {
-            wait(NULL);
-            nb_process_runned--;
+            replace_variables(cmd, cmd_size, path_file, argv[1]);
+            ex_cmd(cmd, cmd_size, path_file, argv[1]);
+            free(cmd);
+            closedir(dirp);
+            exit(EXIT_SUCCESS);
+        }
+        else // Processus parent
+        {
+            wait(NULL); // Attendre la fin de l'exécution de l'élément actuel
         }
     }
 
+    // Libération des ressources
     free(cmd);
     closedir(dirp);
     return 0;
