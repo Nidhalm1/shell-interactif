@@ -113,25 +113,22 @@ loop_options *init_struc()
 loop_options *option_struc(int argc, char *argv[])
 {
     loop_options *opt_struc = init_struc();
-    int opt;
-    optind = 4;
-    // Analyse des options avec getopt
-    while ((opt = getopt(argc, argv, "Are:t:p:")) != -1)
+
+    for (int i = 4; i < argc; i++)
     {
-        switch (opt)
+        if (strcmp(argv[i], "-A") == 0)
         {
-        case 'A':
             opt_struc->opt_A = true;
-            break;
-
-        case 'r':
+        }
+        else if (strcmp(argv[i], "-r") == 0)
+        {
             opt_struc->opt_r = true;
-            break;
-
-        case 'e':
-            if (optarg != NULL && strlen(optarg) > 0)
+        }
+        else if (strcmp(argv[i], "-e") == 0)
+        {
+            if (i + 1 < argc && argv[i + 1][0] != '-')
             {
-                opt_struc->ext = strdup(optarg); // Stocker l'extension
+                opt_struc->ext = strdup(argv[++i]);
                 if (!opt_struc->ext)
                 {
                     perror("Erreur d'allocation mémoire pour l'option -e");
@@ -141,17 +138,16 @@ loop_options *option_struc(int argc, char *argv[])
             }
             else
             {
-                fprintf(stderr, "Erreur : l'option -e nécessite une extension valide.\n");
+                fprintf(stderr, "Erreur : l'option -e nécessite un argument valide.\n");
                 free(opt_struc);
                 return NULL;
             }
-            break;
-
-        case 't':
-            if (optarg != NULL && (strcmp(optarg, "f") == 0 || strcmp(optarg, "d") == 0 ||
-                                   strcmp(optarg, "l") == 0 || strcmp(optarg, "p") == 0))
+        }
+        else if (strcmp(argv[i], "-t") == 0)
+        {
+            if (i + 1 < argc && argv[i + 1][0] != '-')
             {
-                opt_struc->type = strdup(optarg); // Stocker le type
+                opt_struc->type = strdup(argv[++i]);
                 if (!opt_struc->type)
                 {
                     perror("Erreur d'allocation mémoire pour l'option -t");
@@ -161,16 +157,16 @@ loop_options *option_struc(int argc, char *argv[])
             }
             else
             {
-                fprintf(stderr, "Erreur : type invalide pour l'option -t. Types valides : f, d, l, p.\n");
+                fprintf(stderr, "Erreur : l'option -t nécessite un argument valide (f, d, l, p).\n");
                 free(opt_struc);
                 return NULL;
             }
-            break;
-
-        case 'p':
-            if (optarg != NULL && atoi(optarg) > 0)
+        }
+        else if (strcmp(argv[i], "-p") == 0)
+        {
+            if (i + 1 < argc && argv[i + 1][0] != '-' && atoi(argv[i + 1]) > 0)
             {
-                opt_struc->max = atoi(optarg); // Stocker le nombre maximal de processus
+                opt_struc->max = atoi(argv[++i]);
             }
             else
             {
@@ -178,21 +174,13 @@ loop_options *option_struc(int argc, char *argv[])
                 free(opt_struc);
                 return NULL;
             }
-            break;
-
-        case '?':
-            fprintf(stderr, "Erreur : option non reconnue.\n");
-            free(opt_struc);
-            return NULL;
-
-        default:
-            fprintf(stderr, "Erreur : option inattendue.\n");
-            free(opt_struc);
-            return NULL;
+        }
+        else
+        {
+            // Ignorer les autres arguments non reconnus ici
+            continue;
         }
     }
-
-    optind = 0;
 
     return opt_struc;
 }
@@ -328,6 +316,14 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     int nb_process_runned = 0;
     while ((entry = readdir(dirp)) != NULL)
     {
+        char path_file[MAX_LENGTH];
+        snprintf(path_file, sizeof(path_file), "%s/%s", path, entry->d_name);
+
+        if (lstat(path_file, &st) == -1)
+        {
+            perror("Erreur avec lstat");
+            continue;
+        }
 
         if (!options->opt_A && entry->d_name[0] == '.')
         {
@@ -338,9 +334,6 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
         {
             continue;
         }
-
-        char path_file[MAX_LENGTH];
-        snprintf(path_file, sizeof(path_file), "%s/%s", path, entry->d_name);
 
         if (lstat(path_file, &st) == -1)
         {
