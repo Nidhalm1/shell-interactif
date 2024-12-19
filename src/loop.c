@@ -15,6 +15,47 @@
 #include <../include/execute.h>
 #include <../include/command.h>
 
+void print_loop_options(loop_options *options)
+{
+    if (options == NULL)
+    {
+        printf("Options are NULL.\n");
+        return;
+    }
+
+    printf("Loop Options:\n");
+
+    printf("  -A (All files): %s\n", options->opt_A ? "Enabled" : "Disabled");
+    printf("  -r (Recursive): %s\n", options->opt_r ? "Enabled" : "Disabled");
+
+    if (options->ext != NULL)
+    {
+        printf("  -e (Extension): %s\n", options->ext);
+    }
+    else
+    {
+        printf("  -e (Extension): Not set\n");
+    }
+
+    if (options->type != NULL)
+    {
+        printf("  -t (Type): %s\n", options->type);
+    }
+    else
+    {
+        printf("  -t (Type): Not set\n");
+    }
+
+    if (options->max != -1)
+    {
+        printf("  -p (Max processes): %d\n", options->max);
+    }
+    else
+    {
+        printf("  -p (Max processes): Not set\n");
+    }
+}
+
 /**
  * @brief Initialise une structure loop_options
  *
@@ -43,11 +84,19 @@ loop_options *init_struc()
  * @param argv Tableau d'arguments
  * @return loop_options* Pointeur vers la structure avec les options analysées ou NULL en cas d'erreur
  */
+/**
+ * @brief Analyse les options de ligne de commande et remplit une structure loop_options
+ *
+ * @param argc Nombre d'arguments
+ * @param argv Tableau d'arguments
+ * @return loop_options* Pointeur vers la structure avec les options analysées ou NULL en cas d'erreur
+ */
 loop_options *option_struc(int argc, char *argv[])
 {
     loop_options *opt_struc = init_struc();
     int opt;
     optind = 4;
+    // Analyse des options avec getopt
     while ((opt = getopt(argc, argv, "Are:t:p:")) != -1)
     {
         switch (opt)
@@ -55,25 +104,76 @@ loop_options *option_struc(int argc, char *argv[])
         case 'A':
             opt_struc->opt_A = true;
             break;
+
         case 'r':
             opt_struc->opt_r = true;
             break;
+
         case 'e':
-            opt_struc->ext = optarg;
+            if (optarg != NULL && strlen(optarg) > 0)
+            {
+                opt_struc->ext = strdup(optarg); // Stocker l'extension
+                if (!opt_struc->ext)
+                {
+                    perror("Erreur d'allocation mémoire pour l'option -e");
+                    free(opt_struc);
+                    return NULL;
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Erreur : l'option -e nécessite une extension valide.\n");
+                free(opt_struc);
+                return NULL;
+            }
             break;
+
         case 't':
-            opt_struc->type = optarg;
+            if (optarg != NULL && (strcmp(optarg, "f") == 0 || strcmp(optarg, "d") == 0 ||
+                                   strcmp(optarg, "l") == 0 || strcmp(optarg, "p") == 0))
+            {
+                opt_struc->type = strdup(optarg); // Stocker le type
+                if (!opt_struc->type)
+                {
+                    perror("Erreur d'allocation mémoire pour l'option -t");
+                    free(opt_struc);
+                    return NULL;
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Erreur : type invalide pour l'option -t. Types valides : f, d, l, p.\n");
+                free(opt_struc);
+                return NULL;
+            }
             break;
+
         case 'p':
-            opt_struc->max = atoi(optarg);
+            if (optarg != NULL && atoi(optarg) > 0)
+            {
+                opt_struc->max = atoi(optarg); // Stocker le nombre maximal de processus
+            }
+            else
+            {
+                fprintf(stderr, "Erreur : l'option -p nécessite un entier strictement positif.\n");
+                free(opt_struc);
+                return NULL;
+            }
             break;
+
         case '?':
+            fprintf(stderr, "Erreur : option non reconnue.\n");
             free(opt_struc);
             return NULL;
+
         default:
-            break;
+            fprintf(stderr, "Erreur : option inattendue.\n");
+            free(opt_struc);
+            return NULL;
         }
     }
+
+    optind = 0;
 
     return opt_struc;
 }
@@ -192,6 +292,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     DIR *dirp = opendir(path);
     if (dirp == NULL)
     {
+        print_loop_options(options);
         printerr("Erreur d'ouverture du répertoire\n");
         return 1;
     }
@@ -206,6 +307,9 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     int nb_process_runned = 0;
     while ((entry = readdir(dirp)) != NULL)
     {
+
+        print_loop_options(options);
+
         if (!options->opt_A && entry->d_name[0] == '.')
         {
             continue;
