@@ -412,10 +412,10 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
         else if (p == 0) // Processus enfant
         {
             replace_variables(cmd, cmd_size, path_file, argv[1]);
-            ex_cmd(cmd, cmd_size, path_file, argv[1]);
+            int ret=ex_cmd(cmd, cmd_size, path_file, argv[1]);
             free(cmd);
             closedir(dirp);
-            exit(++max_return_code);
+            exit(ret);
         }
         else // Processus parent
         {
