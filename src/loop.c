@@ -113,22 +113,30 @@ loop_options *init_struc()
 loop_options *option_struc(int argc, char *argv[])
 {
     loop_options *opt_struc = init_struc();
+    bool can_stock_A = true;
+    bool can_stock_r = true;
+    bool can_stock_t = true;
+    bool can_stock_p = true;
+    bool can_stock_e = true;
 
     for (int i = 4; i < argc; i++)
     {
-        if (strcmp(argv[i], "-A") == 0)
+        if (strcmp(argv[i], "-A") == 0 && can_stock_A)
         {
             opt_struc->opt_A = true;
+            can_stock_A = false;
         }
-        else if (strcmp(argv[i], "-r") == 0)
+        else if (strcmp(argv[i], "-r") == 0 && can_stock_r)
         {
             opt_struc->opt_r = true;
+            can_stock_r = false;
         }
-        else if (strcmp(argv[i], "-e") == 0)
+        else if (strcmp(argv[i], "-e") == 0 && can_stock_e)
         {
             if (i + 1 < argc && argv[i + 1][0] != '-')
             {
                 opt_struc->ext = strdup(argv[++i]);
+                can_stock_e = false;
                 if (!opt_struc->ext)
                 {
                     perror("Erreur d'allocation mémoire pour l'option -e");
@@ -143,11 +151,12 @@ loop_options *option_struc(int argc, char *argv[])
                 return NULL;
             }
         }
-        else if (strcmp(argv[i], "-t") == 0)
+        else if (strcmp(argv[i], "-t") == 0 && can_stock_t)
         {
             if (i + 1 < argc && argv[i + 1][0] != '-')
             {
                 opt_struc->type = strdup(argv[++i]);
+                can_stock_t = false;
                 if (!opt_struc->type)
                 {
                     perror("Erreur d'allocation mémoire pour l'option -t");
@@ -162,11 +171,12 @@ loop_options *option_struc(int argc, char *argv[])
                 return NULL;
             }
         }
-        else if (strcmp(argv[i], "-p") == 0)
+        else if (strcmp(argv[i], "-p") == 0 && can_stock_p)
         {
             if (i + 1 < argc && argv[i + 1][0] != '-' && atoi(argv[i + 1]) > 0)
             {
                 opt_struc->max = atoi(argv[++i]);
+                can_stock_p = false;
             }
             else
             {
@@ -292,17 +302,14 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
 {
     if (options == NULL)
     {
-        printerr("Option non reconnue.\n");
+        printerr("Erreur : les options sont nulles.\n");
         return 1;
     }
 
     DIR *dirp = opendir(path);
     if (dirp == NULL)
     {
-        print_loop_options(options);
-        printf("Les argumument\n");
-        print_args(argv);
-        printerr("Erreur d'ouverture du répertoire\n");
+        fprintf(stderr, "Erreur d'ouverture du répertoire : %s\n", path);
         return 1;
     }
 
@@ -312,10 +319,19 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     size_t cmd_size = 0;
 
     cmd = get_cmd(argv, size_of_tab, &cmd_size);
+    if (cmd == NULL)
+    {
+        fprintf(stderr, "Erreur : commande non valide ou mal formée.\n");
+        closedir(dirp);
+        return 1;
+    }
 
     int nb_process_runned = 0;
+
+    // Parcours des entrées dans le répertoire
     while ((entry = readdir(dirp)) != NULL)
     {
+        bool can_ex = false;
         char path_file[MAX_LENGTH];
         snprintf(path_file, sizeof(path_file), "%s/%s", path, entry->d_name);
 
@@ -325,27 +341,46 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             continue;
         }
 
+        // 1. Ignorer les fichiers cachés si `-A` n'est pas activé
         if (!options->opt_A && entry->d_name[0] == '.')
         {
             continue;
         }
 
+        // 2. Ignorer les entrées spéciales "." et ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         {
             continue;
         }
 
-        if (lstat(path_file, &st) == -1)
+        // 3. Filtrage par type `-t`
+        if (options->type != NULL)
         {
-            perror("Erreur avec lstat");
-            continue;
+            // Filtrage basé sur le type spécifié
+            if (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) // Répertoires
+            {
+                continue;
+            }
+            if (strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) // Fichiers ordinaires
+            {
+                continue;
+            }
+            if (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) // Liens symboliques
+            {
+                continue;
+            }
+            if (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)) // Pipes nommés
+            {
+                continue;
+            }
+            can_ex = true;
+        }
+        else
+        {
+            can_ex = true;
         }
 
-        if (options->opt_r && S_ISDIR(st.st_mode))
-        {
-            loop_function(path_file, argv, size_of_tab, options);
-        }
-
+        // 4. Filtrage par extension `-e`
         if (options->ext != NULL)
         {
             char *ext = get_ext(entry->d_name);
@@ -357,48 +392,57 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             free(ext);
         }
 
-        if (options->type != NULL)
+        // 5. Gestion des sous-répertoires si `-r` est activé
+        if (options->opt_r && S_ISDIR(st.st_mode))
         {
-            if ((strcmp(options->type, "f") == 0 && !S_ISREG(st.st_mode)) ||
-                (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode)) ||
-                (strcmp(options->type, "l") == 0 && !S_ISLNK(st.st_mode)) ||
-                (strcmp(options->type, "p") == 0 && !S_ISFIFO(st.st_mode)))
+            if (loop_function(path_file, argv, size_of_tab, options) != 0)
             {
-                continue;
+                fprintf(stderr, "Erreur lors de la récursion dans le répertoire : %s\n", path_file);
             }
         }
 
+        // 6. Gestion du nombre maximum de processus avec `-p`
         if (options->max > 0 && nb_process_runned >= options->max)
         {
             wait(NULL);
             nb_process_runned--;
         }
 
+        // 7. Création d'un processus pour traiter les entrées filtrées
         pid_t p = fork();
 
         switch (p)
         {
-        case -1:
+        case -1: // Erreur lors du fork
             perror("Erreur lors du fork");
             break;
 
-        case 0:
+        case 0: // Processus enfant
+            if (can_ex)
+            {
+                replace_variables(cmd, cmd_size, path_file, argv[1]);
+                ex_cmd(cmd, cmd_size, path_file, argv[1]);
+                exit(EXIT_SUCCESS);
+            }
+            else
+            {
+                exit(EXIT_SUCCESS);
+            }
 
-            ex_cmd(cmd, cmd_size, path_file, argv[1]);
-            exit(EXIT_SUCCESS);
-
-        default:
+        default: // Processus parent
             nb_process_runned++;
             break;
         }
-
-        while (nb_process_runned > 0)
-        {
-            wait(NULL);
-            nb_process_runned--;
-        }
     }
 
+    // Attendre la fin de tous les processus enfants
+    while (nb_process_runned > 0)
+    {
+        wait(NULL);
+        nb_process_runned--;
+    }
+
+    // Libération des ressources
     free(cmd);
     closedir(dirp);
     return 0;
