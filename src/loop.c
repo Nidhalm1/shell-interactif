@@ -126,12 +126,12 @@ loop_options *option_struc(int argc, char *argv[])
             opt_struc->opt_A = true;
             can_stock_A = false;
         }
-        else if (strcmp(argv[i], "-r") == 0 && can_stock_r)
+        if (strcmp(argv[i], "-r") == 0 && can_stock_r)
         {
             opt_struc->opt_r = true;
             can_stock_r = false;
         }
-        else if (strcmp(argv[i], "-e") == 0 && can_stock_e)
+        if (strcmp(argv[i], "-e") == 0 && can_stock_e)
         {
             if (i + 1 < argc && argv[i + 1][0] != '-')
             {
@@ -151,7 +151,7 @@ loop_options *option_struc(int argc, char *argv[])
                 return NULL;
             }
         }
-        else if (strcmp(argv[i], "-t") == 0 && can_stock_t)
+        if (strcmp(argv[i], "-t") == 0 && can_stock_t)
         {
             if (i + 1 < argc && argv[i + 1][0] != '-')
             {
@@ -171,7 +171,7 @@ loop_options *option_struc(int argc, char *argv[])
                 return NULL;
             }
         }
-        else if (strcmp(argv[i], "-p") == 0 && can_stock_p)
+        if (strcmp(argv[i], "-p") == 0 && can_stock_p)
         {
             if (i + 1 < argc && argv[i + 1][0] != '-' && atoi(argv[i + 1]) > 0)
             {
@@ -184,11 +184,6 @@ loop_options *option_struc(int argc, char *argv[])
                 free(opt_struc);
                 return NULL;
             }
-        }
-        else
-        {
-            // Ignorer les autres arguments non reconnus ici
-            continue;
         }
     }
 
@@ -353,7 +348,22 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             continue;
         }
 
-        // 3. Filtrage par type `-t`
+        //  Gestion des sous-répertoires si `-r` est activé
+        if (options->opt_r && S_ISDIR(st.st_mode))
+        {
+            // Créer une copie séparée du chemin pour la récursion
+            char sub_dir[MAX_LENGTH];
+            snprintf(sub_dir, sizeof(sub_dir), "%s/%s", path, entry->d_name);
+
+            // Appeler récursivement loop_function
+            if (loop_function(sub_dir, argv, size_of_tab, options) != 0)
+            {
+                fprintf(stderr, "Erreur lors de la récursion dans le répertoire : %s\n", sub_dir);
+            }
+            continue; // Passer à l'entrée suivante après la récursion
+        }
+
+        // Filtrage par type `-t`
         if (options->type != NULL)
         {
             if (strcmp(options->type, "d") == 0 && !S_ISDIR(st.st_mode))
@@ -374,7 +384,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             }
         }
 
-        // 4. Filtrage par extension `-e`
+        //  Filtrage par extension `-e`
         if (options->ext != NULL)
         {
             char *ext = get_ext(entry->d_name); // Obtenir l'extension du fichier
@@ -398,22 +408,6 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             free(filename_without_ext); // Libérer la mémoire
         }
 
-        // 5. Gestion des sous-répertoires si `-r` est activé
-        if (options->opt_r && S_ISDIR(st.st_mode))
-        {
-            // Créer une copie séparée du chemin pour la récursion
-            char sub_dir[MAX_LENGTH];
-            snprintf(sub_dir, sizeof(sub_dir), "%s/%s", path, entry->d_name);
-
-            // Appeler récursivement loop_function
-            if (loop_function(sub_dir, argv, size_of_tab, options) != 0)
-            {
-                fprintf(stderr, "Erreur lors de la récursion dans le répertoire : %s\n", sub_dir);
-            }
-            continue; // Passer à l'entrée suivante après la récursion
-        }
-
-        // Exécution des commandes structurelles pour l'élément actuel
         pid_t p = fork();
 
         if (p == -1)
