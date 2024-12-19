@@ -401,6 +401,16 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
                 continue;
             }
             free(ext);
+
+            char *filename_without_ext = remove_ext(entry->d_name);
+            if (filename_without_ext == NULL)
+            {
+                perror("Erreur lors de la suppression de l'extension");
+                continue;
+            }
+
+            snprintf(path_file, sizeof(path_file), "%s/%s", path, filename_without_ext);
+            free(filename_without_ext);
         }
 
         pid_t p = fork();
