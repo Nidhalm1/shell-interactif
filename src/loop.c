@@ -92,7 +92,7 @@ loop_options *init_struc()
     opt_struc->opt_r = false;
     opt_struc->ext = NULL;
     opt_struc->type = NULL;
-    opt_struc->max = -1;
+    opt_struc->max = 1;
     return opt_struc;
 }
 
@@ -326,7 +326,23 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
     struct stat st;
     char **cmd = NULL;
     size_t cmd_size = 0;
+    int pipes[options->max][2];
+    pid_t children[options->max];
+    char *paths_tab[options->max];
+    size_t path_stock = 0;
 
+    if (options->max > 0)
+    {
+        for (int i = 0; i < options->max; i++)
+        {
+            if (pipe(pipes[i]) == -1)
+            {
+                perror("Erreur lors de la création du pipe");
+                closedir(dirp);
+                return 1;
+            }
+        }
+    }
     cmd = get_cmd(argv, size_of_tab, &cmd_size);
     if (cmd == NULL)
     {
@@ -418,42 +434,96 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
             free(filename_without_ext);
         }
 
-        pid_t p = fork();
+        // Ajout du chemin dans le tableau
+        paths_tab[path_stock] = strdup(path_file);
+        path_stock++;
 
-        if (p == -1)
-        {
-            perror("Erreur lors du fork");
-        }
-        else if (p == 0) // Processus enfant
-        {
-            replace_variables(cmd, cmd_size, path_file, argv[1]);
-            int ret = ex_cmd(cmd, cmd_size, path_file, argv[1]);
-            free_loop_options(options);
-            free_args(cmd);
-            closedir(dirp);
-            exit(ret);
-        }
-        else // Processus parent
-        {
-            int status;
-            wait(&status); // Attendre la fin du processus enfant
-
-            // Mise à jour du code de retour maximum
-            if (WIFEXITED(status))
+        if (path_stock == options->max)
+        { // Si le buffer est plein
+            for (int i = 0; i < path_stock; i++)
             {
-                int return_code = WEXITSTATUS(status);
-                if (return_code > max_return_code)
+                if (pipe(pipes[i]) == -1)
                 {
-                    max_return_code = return_code;
+                    perror("Erreur lors de la création du pipe");
+                    closedir(dirp);
+                    return 1;
+                }
+
+                if ((children[i] = fork()) == 0)
+                {
+                    // Processus enfant
+                    close(pipes[i][1]); // Fermer l'écriture
+                    char received_message[MAX_LENGTH];
+                    read(pipes[i][0], received_message, sizeof(received_message));
+                    close(pipes[i][0]); // Fermer la lecture
+
+                    replace_variables(cmd, cmd_size, received_message, argv[1]);
+                    int ret = ex_cmd(cmd, cmd_size, received_message, argv[1]);
+
+                    free_loop_options(options);
+                    free_args(cmd);
+                    exit(ret);
+                }
+                else
+                {
+                    // Parent : envoie le chemin au processus enfant
+                    close(pipes[i][0]); // Fermer la lecture
+                    write(pipes[i][1], paths_tab[i], strlen(paths_tab[i]) + 1);
+                    close(pipes[i][1]); // Fermer l'écriture
                 }
             }
-            else if (WIFSIGNALED(status))
+
+            // Attente des processus enfants
+            for (int i = 0; i < path_stock; i++)
             {
-                max_return_code = 255; // Si interrompu par un signal
+                int status;
+                waitpid(children[i], &status, 0);
+                if (WIFEXITED(status))
+                {
+                    int return_code = WEXITSTATUS(status);
+                    if (return_code > max_return_code)
+                    {
+                        max_return_code = return_code;
+                    }
+                }
+                else if (WIFSIGNALED(status))
+                {
+                    max_return_code = 255;
+                }
+                free(paths_tab[i]); // Nettoyage
             }
+            path_stock = 0; // Réinitialiser le buffer
         }
     }
 
+    // Traiter les éléments restants
+    for (size_t i = 0; i < path_stock; i++)
+    {
+        if ((children[i] = fork()) == 0)
+        {
+            replace_variables(cmd, cmd_size, paths_tab[i], argv[1]);
+            int ret = ex_cmd(cmd, cmd_size, paths_tab[i], argv[1]);
+            free_loop_options(options);
+            free_args(cmd);
+            exit(ret);
+        }
+    }
+    for (size_t i = 0; i < path_stock; i++)
+    {
+        int status;
+        waitpid(children[i], &status, 0);
+        if (WIFEXITED(status))
+        {
+            int return_code = WEXITSTATUS(status);
+            if (return_code > max_return_code)
+            {
+                max_return_code = return_code;
+            }
+        }
+        free(paths_tab[i]);
+    }
+
+    // Nettoyage final
     free_args(cmd);
     closedir(dirp);
     return max_return_code;
