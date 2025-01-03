@@ -35,6 +35,29 @@ int parse_and_execute(int argc, char **argv)
         return parse_and_execute_simple(argc, argv);
     }
 
+    // Parcours des arguments pour détecter une structure de commande
+    int in_braces = 0; // Compteur pour vérifier si on est à l'intérieur d'accolades
+
+    for (int i = 0; i < argc; i++)
+    {
+        // Vérifie l'entrée dans les accolades
+        if (argv[i] != NULL && strcmp(argv[i], "{") == 0)
+        {
+            in_braces++;
+        }
+        // Vérifie la sortie des accolades
+        else if (argv[i] != NULL && strcmp(argv[i], "}") == 0)
+        {
+            if (in_braces > 0)
+                in_braces--;
+        }
+        // Si un point-virgule est trouvé en dehors des accolades
+        else if (argv[i] != NULL && strcmp(argv[i], ";") == 0 && in_braces == 0)
+        {
+            return parse_and_execute_structured(argc, argv);
+        }
+    }
+
     // Si la première commande est "For", on lance une boucle
     if (argv[0] != NULL && strcmp(argv[0], "for") == 0)
     {
@@ -48,16 +71,6 @@ int parse_and_execute(int argc, char **argv)
     if (argv[0] != NULL && strcmp(argv[0], "if") == 0)
     {
         return if_function(argc, argv);
-    }
-
-    // Parcours des arguments pour détecter une structure de commande
-    for (int i = 0; i < argc; i++)
-    {
-        // Vérifie si l'argument courant est un point-virgule
-        if (argv[i] != NULL && strcmp(argv[i], ";") == 0)
-        {
-            return parse_and_execute_structured(argc, argv);
-        }
     }
 
     // Parcours des arguments pour détecter un pipe (|) et rediriger l'exécution
