@@ -488,7 +488,7 @@ int loop_function(char *path, char *argv[], size_t size_of_tab, loop_options *op
                 }
                 else if (WIFSIGNALED(status))
                 {
-                    max_return_code = 255;
+                    return 255;
                 }
                 free(paths_tab[i]); // Nettoyage
             }
