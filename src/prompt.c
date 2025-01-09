@@ -89,6 +89,7 @@ char *prompt(int last_return_code)
     }
     else
     {
+        memmove(&dir[3], &dir[5], strlen(dir) - 4);
         snprintf(prompt_string, sizeof(prompt_string), "%s[%s]%s%s%s$ ", color, "SIG", color_dir, dir, reset_color);
     }
     rl_outstream = stderr;
