@@ -21,8 +21,9 @@ int parse_and_execute_pipe(int argc, char **argv)
     int fd_in = STDIN_FILENO; // Initialement, l'entrée est le stdin
     int pipefd[2];            // Pipe pour communication
     int len = argc;
+    pid_t pid[256];
     int i = 0;
-
+    int indicePid = 0;
     while (i < len)
     {
         char **s = malloc((len - i + 1) * sizeof(char *)); // Ajustement de la taille
@@ -59,12 +60,7 @@ int parse_and_execute_pipe(int argc, char **argv)
         }
 
         // Exécute la commande avec les bons descripteurs
-        int val = execute_command(s[0], fd_in, (i + j < len) ? pipefd[1] : STDOUT_FILENO, s);
-        if (val != 0)
-        {
-            return val;
-        }
-
+        pid[indicePid++] = execute_commandPourPipe(s[0], fd_in, (i + j < len) ? pipefd[1] : STDOUT_FILENO, s);
         free(s);
 
         // Fermeture de l'extrémité d'écriture dans le processus parent
@@ -82,6 +78,48 @@ int parse_and_execute_pipe(int argc, char **argv)
     // Ferme la dernière entrée de pipe
     if (fd_in != STDIN_FILENO)
         close(fd_in);
+    int j = 0;
+    int status;
+    while (waitpid(pid[j++], &status, 0) > 0)
+    {
+        
+    }
 
     return 0;
+}
+int execute_commandPourPipe(const char *command, int fd0, int fd1, char **argv)
+{
+    pid_t pid;
+    if ((pid = fork()) == 0)
+    {
+        if (fd0 != STDIN_FILENO)
+        {
+            if (dup2(fd0, STDIN_FILENO) == -1)
+            {
+                perror("Erreur lors de dup2 (entrée)");
+                exit(1);
+            }
+            close(fd0);
+        }
+
+        // Redirection de la sortie
+        if (fd1 != STDOUT_FILENO)
+        {
+            if (dup2(fd1, STDOUT_FILENO) == -1)
+            {
+                perror("Erreur lors de dup2 (sortie)");
+                exit(1);
+            }
+            close(fd1);
+        }
+        if (execvp(command, argv) == -1)
+        {
+            perror("Erreur lors de execvp");
+            exit(1); // Convention : 127 pour une commande introuvable
+        }
+    }
+    else
+    {
+        return pid;
+    }
 }
