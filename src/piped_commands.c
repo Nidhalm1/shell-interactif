@@ -85,12 +85,17 @@ int parse_and_execute_pipe(int argcc, char **s)
             }
             close(in_fd);
         }
-        execvp(cmd[0], cmd);
-        perror("execvp");
-        exit(1);
+        
+        size_t cmd_len = 0;
+        for (int j = 0; cmd[j] != NULL; j++) {
+            cmd_len++;
+        }
+        execCommandPipe(cmd[0],STDIN_FILENO,STDOUT_FILENO,cmd,cmd_len);
+        wait(NULL);
+        exit(0);
     }
     // Attendre tous les processus enfants
-    free_argg(s_copy,argc);
+    free_argg(s_copy, argc);
     while (wait(NULL) > 0)
     {
         /* code */
@@ -98,16 +103,16 @@ int parse_and_execute_pipe(int argcc, char **s)
     return 0;
 }
 void free_argg(char **s, int size)
+{
+    for (int i = 0; i < size; i++)
     {
-        for (int i = 0; i < size; i++)
+        if (s[i] != NULL)
         {
-            if (s[i] != NULL)
-            {
-                free(s[i]);
-            }
+            free(s[i]);
         }
-        free(s);
     }
+    free(s);
+}
 /**
  * @brief Exécute une commande externe
  *
@@ -117,7 +122,7 @@ void free_argg(char **s, int size)
  * @param argv Arguments de la commande
  * @return int Code de retour de la commande
  */
-int execCommandPipe(const char *command, int fd0, int fd1, char **argv,int argc)
+int execCommandPipe(const char *command, int fd0, int fd1, char **argv, int argc)
 {
     int fd2 = STDERR_FILENO; // pour les erreurs
     pid_t pid = fork();
