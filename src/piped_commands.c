@@ -31,6 +31,7 @@
 int parse_and_execute_pipe(int argcc, char **s)
 {
     int argc = argcc;
+    int original_argc = argcc; // Sauvegarder la valeur originale de argc
     pid_t parent_pid = getpid();
     char **s_copy = malloc((argc + 1) * sizeof(char *));
     if (s_copy == NULL)
@@ -95,7 +96,7 @@ int parse_and_execute_pipe(int argcc, char **s)
         exit(0);
     }
     // Attendre tous les processus enfants
-    free_argg(s_copy, argc);
+    free_argg(s_copy, original_argc); // Utiliser la valeur originale de argc
     while (wait(NULL) > 0)
     {
         /* code */
