@@ -30,28 +30,18 @@
  */
 int parse_and_execute_pipe(int argcc, char **s)
 {
-    int argc = argcc;
-    int original_argc = argcc; // Sauvegarder la valeur originale de argc
-    pid_t parent_pid = getpid();
-    char **s_copy = malloc((argc + 1) * sizeof(char *));
-    if (s_copy == NULL)
-    {
-        perror("malloc");
-        exit(1);
-    }
-    for (int i = 0; i < argc; i++)
-    {
-        s_copy[i] = strdup(s[i]);
-        if (s_copy[i] == NULL)
-        {
-            perror("strdup");
-            exit(1);
-        }
-    }
-    s_copy[argc] = NULL;
     pid_t pid = fork();
     if (pid == 0)
     {
+        int argc = argcc;
+        int original_argc = argcc; // Sauvegarder la valeur originale de argc
+        pid_t parent_pid = getpid();
+        char *s_copy[argc + 1]; // Tableau statique
+        for (int i = 0; i < argc; i++)
+        {
+            s_copy[i] = s[i]; // Ne duplique que les pointeurs
+        }
+        s_copy[argc] = NULL; // Terminaison
         int i;
         int in_fd = STDIN_FILENO;
         int fd[2];
@@ -86,17 +76,17 @@ int parse_and_execute_pipe(int argcc, char **s)
             }
             close(in_fd);
         }
-        
+
         size_t cmd_len = 0;
-        for (int j = 0; cmd[j] != NULL; j++) {
+        for (int j = 0; cmd[j] != NULL; j++)
+        {
             cmd_len++;
         }
-        execCommandPipe(cmd[0],STDIN_FILENO,STDOUT_FILENO,cmd,cmd_len);
+        execCommandPipe(cmd[0], STDIN_FILENO, STDOUT_FILENO, cmd, cmd_len);
         wait(NULL);
         exit(0);
     }
     // Attendre tous les processus enfants
-    free_argg(s_copy, original_argc); // Utiliser la valeur originale de argc
     while (wait(NULL) > 0)
     {
         /* code */
@@ -277,5 +267,24 @@ int execCommandPipe(const char *command, int fd0, int fd1, char **argv, int argc
     { // Erreur de fork
         perror("fork");
         return 1;
+    }
+    else
+    { // Processus parent
+        int status;
+        waitpid(pid, &status,WNOHANG);
+        if (WIFEXITED(status))
+        {
+            return WEXITSTATUS(status);
+        }
+        else if (WIFSIGNALED(status))
+        { // Si l'enfant s'est terminé de manière anormale
+            return 2;
+        }
+        else
+        {
+            return 1;
+        }
+        
+        
     }
 }
