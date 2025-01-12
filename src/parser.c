@@ -9,6 +9,7 @@
 #include <sched.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "../include/piped_commands.h" 
 #include "../include/piped_commands.h"
 #include "../include/if_function.h"
 #include "../include/structured_command.h"
