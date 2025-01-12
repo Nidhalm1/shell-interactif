@@ -86,12 +86,13 @@ int parse_and_execute_pipe(int argcc, char **s)
         wait(NULL);
         exit(0);
     }
-    // Attendre tous les processus enfants
-    while (wait(NULL) > 0)
-    {
-        /* code */
+    else
+    { 
+        // Attendre uniquement le dernier processus enfant
+        int status;
+        waitpid(pid, &status, 0); // Réactiver cet appel
+        return 0;
     }
-    return 0;
 }
 void free_argg(char **s, int size)
 {
@@ -270,20 +271,7 @@ int execCommandPipe(const char *command, int fd0, int fd1, char **argv, int argc
     }
     else
     { // Processus parent
-        int status;
-        waitpid(pid, &status,WNOHANG);
-        if (WIFEXITED(status))
-        {
-            return WEXITSTATUS(status);
-        }
-        else if (WIFSIGNALED(status))
-        { // Si l'enfant s'est terminé de manière anormale
-            return 2;
-        }
-        else
-        {
-            return 1;
-        }
-        for (size_t i = 0; i < 700; i++){}
+        // Ne pas attendre ici
+        // return status après la terminaison des processus dans parse_and_execute_pipe
     }
 }
