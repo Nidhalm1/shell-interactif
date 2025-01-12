@@ -284,7 +284,6 @@ int execCommandPipe(const char *command, int fd0, int fd1, char **argv, int argc
         {
             return 1;
         }
-        
-        
+        for (size_t i = 0; i < 700; i++){}
     }
 }
