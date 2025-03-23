@@ -1,4 +1,4 @@
-# **FSH - Un mini-shell avec boucles for**
+# **FSH - Un shell avec boucles for**
 
 ## **Description**
 FSH est un interpréteur de commandes interactif qui permet d'exécuter des commandes externes et internes, de gérer les redirections et d'interpréter certaines structures conditionnelles et boucles.
